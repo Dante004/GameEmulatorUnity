@@ -33,6 +33,8 @@ public class DetectingFiles : MonoBehaviour
                     textName.horizontalOverflow = HorizontalWrapMode.Overflow;
                     textName.verticalOverflow = VerticalWrapMode.Overflow;
                     textName.alignment = TextAnchor.MiddleCenter;
+                    RomGame romGame = ROMLoader.Load(files[i]);
+                    Debug.Log(romGame.ToString());
                 }
                 positionY -= 30;
             }
