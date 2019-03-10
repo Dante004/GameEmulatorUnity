@@ -9,6 +9,7 @@ namespace Emulator.CPU
     [Flags]
     public enum RegisterFlags
     {
+        None = 0,
         Z = 1<<7,
         N = 1<<6,
         H = 1<<5,

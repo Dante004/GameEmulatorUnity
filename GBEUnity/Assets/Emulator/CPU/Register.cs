@@ -89,7 +89,10 @@ namespace Emulator.CPU
             return (F & (byte)flag) == (byte)flag;
         }
 
-        public void ResetRegister()
+        /// <summary>
+        /// Setting registers to default values
+        /// </summary>
+        public void SetupRegister()
         {
             AF = 0x01B0;
             BC = 0x0013;
