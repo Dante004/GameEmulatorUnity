@@ -225,9 +225,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textPrefab: {fileID: 6809426626603946619, guid: 8b19a2bf56901a143b1d491670af0d40,
     type: 3}
+  titlePrefab: {fileID: 2672939505202508681, guid: c688304d547b53548b5387804a1ceadb,
+    type: 3}
   numberOfFiles: 0
   files: []
   positionY: 50
+  positionX: 20
 --- !u!1 &1378873463
 GameObject:
   m_ObjectHideFlags: 0
