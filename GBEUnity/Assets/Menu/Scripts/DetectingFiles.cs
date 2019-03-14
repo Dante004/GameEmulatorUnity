@@ -16,32 +16,23 @@ public class DetectingFiles : MonoBehaviour
     public int positionY = 10;
     public int positionX = 100;
     public int numberOfPosters = 0;
-  public Sprite sprite;
+    public Sprite sprite;
     public string TMP;
-    // Start is called before the first frame update
-
+    
     void Start()
+
     {
         if (Directory.Exists(Path.GetFullPath("Roms")))
         {
-            Dictionary<string, Sprite> obrazki = Resources.LoadAll<Sprite>("img").ToDictionary(x => x.name.ToUpper(), x => x);
+    
+             Dictionary<string, Sprite> Images = Resources.LoadAll<Sprite>("img").ToDictionary(x => x.name.ToUpper(), x => x);
             files = Directory.GetFileSystemEntries(Path.GetFullPath("Roms"));
             for (int i = 0; i < files.Length; i++)
             {
+                getRom(files[i]);
                 if (!files[i].EndsWith(".meta") && files[i].EndsWith(".gb"))
                 {
-                    numberOfFiles++;
-                    FileInfo Files = new FileInfo(files[i]);
-                    GameObject prefabTextTmp = Instantiate(textPrefab) as GameObject;
-                    Text textName = prefabTextTmp.GetComponentInChildren<Text>();
-                    textName.text = "Files :" + Files.Name;
-                    prefabTextTmp.transform.SetParent(gameObject.transform, false);
-                    RectTransform rect = prefabTextTmp.GetComponent<RectTransform>();
-                    rect.localPosition = new Vector2(prefabTextTmp.transform.position.x, positionY);
-                    textName.fontSize = 50;
-                    textName.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    textName.verticalOverflow = VerticalWrapMode.Overflow;
-                    textName.alignment = TextAnchor.MiddleCenter;
+                    numberOfFiles++;                    
                     RomGame romGame = ROMLoader.Load(files[i]);                   
                     GameObject prefabTitleTmp = Instantiate(titlePrefab) as GameObject;
                     Text title = prefabTitleTmp.GetComponentInChildren<Text>();
@@ -55,11 +46,31 @@ public class DetectingFiles : MonoBehaviour
                     title.verticalOverflow = VerticalWrapMode.Overflow;
                     title.alignment = TextAnchor.MiddleCenter;
                     posters = Directory.GetFileSystemEntries("Assets\\Resources");
-                    prefabTitleTmp.GetComponentInChildren<Image>().sprite = obrazki[TMP];
-                }
+                    prefabTitleTmp.GetComponentInChildren<Image>().sprite = Images[TMP];
+                    prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.localPosition = new Vector2(40, -170);
+                    prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.sizeDelta = new Vector2(250, 250);
+                }                
                 positionY -= 30;
                 positionX -= 200;            
             }           
         }        
+    }
+    public void getRom(string path)
+    {     
+            if (!path.EndsWith(".meta") && path.EndsWith(".gb"))
+            {
+                numberOfFiles++;
+                FileInfo Files = new FileInfo(path);
+                GameObject prefabTextTmp = Instantiate(textPrefab) as GameObject;
+                Text textName = prefabTextTmp.GetComponentInChildren<Text>();
+                textName.text = "Files :" + Files.Name;
+                prefabTextTmp.transform.SetParent(gameObject.transform, false);
+                RectTransform rect = prefabTextTmp.GetComponent<RectTransform>();
+                rect.localPosition = new Vector2(prefabTextTmp.transform.position.x, positionY);
+                textName.fontSize = 50;
+                textName.horizontalOverflow = HorizontalWrapMode.Overflow;
+                textName.verticalOverflow = VerticalWrapMode.Overflow;
+                textName.alignment = TextAnchor.MiddleCenter;
+            }
     }
 }
