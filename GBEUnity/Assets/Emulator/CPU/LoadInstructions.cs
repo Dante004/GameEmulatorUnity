@@ -39,5 +39,10 @@ namespace Emulator.CPU
         {
             //TODO: reaad memory
         }
+
+        public void ReadByte(byte value,ushort address)
+        {
+            //TODO: reaad memory
+        }
     }
 }
