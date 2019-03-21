@@ -273,5 +273,30 @@ namespace Emulator.CPU
             //TODO: read memory
         }
 
+        public void CompareImediate()
+        {
+            //TODO: read memory
+        }
+
+        public void Compare(byte value)
+        {
+            RegisterFlags registerToSet = RegisterFlags.None;
+            if ((_register.A & 0x0F) < (value & 0x0F)) registerToSet |= RegisterFlags.H;
+            if(value > _register.A) registerToSet |= RegisterFlags.C;
+            registerToSet |= RegisterFlags.N;
+            if (_register.A == value) registerToSet |= RegisterFlags.Z;
+        }
+
+        public void NegateA()
+        {
+            RegisterFlags registerToSet = RegisterFlags.None;
+            if (_register.A == 0) registerToSet |= RegisterFlags.C;
+            if ((_register.A & 0x0F) != 0) registerToSet |= RegisterFlags.H;
+            _register.A = (byte)(0xFF & -_register.A);
+            if (_register.A == 0) registerToSet |= RegisterFlags.Z;
+            registerToSet |= RegisterFlags.N;
+            _register.SetFlags(registerToSet);
+        }
+
     }
 }

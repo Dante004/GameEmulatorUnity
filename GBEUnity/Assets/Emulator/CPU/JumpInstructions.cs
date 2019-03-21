@@ -14,5 +14,63 @@ namespace Emulator.CPU
         {
             _register = register;
         }
+
+        private void JumpIfCarry()
+        {
+            if (_register.GetFlag(RegisterFlags.C))
+            {
+                Jump();
+            }
+            else
+            {
+                _register.PC += 2;
+            }
+        }
+
+        private void JumpIfNotCarry()
+        {
+            if (_register.GetFlag(RegisterFlags.C))
+            {
+                _register.PC += 2;
+            }
+            else
+            {
+                Jump();
+            }
+        }
+
+        private void JumpIfZero()
+        {
+            if (_register.GetFlag(RegisterFlags.Z))
+            {
+                Jump();
+            }
+            else
+            {
+                _register.PC += 2;
+            }
+        }
+
+        private void JumpIfNotZero()
+        {
+            if (_register.GetFlag(RegisterFlags.Z))
+            {
+                _register.PC += 2;
+            }
+            else
+            {
+                Jump();
+            }
+        }
+
+        private void Jump(ushort address)
+        {
+            _register.PC = address;
+        }
+
+        private void Jump()
+        {
+            //TODO: read memory
+        }
     }
 }
