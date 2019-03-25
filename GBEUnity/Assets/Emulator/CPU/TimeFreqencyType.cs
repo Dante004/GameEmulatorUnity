@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Emulator.CPU
 {
-    public enum TimeFreqencyType
+    public enum TimerFrequencyType
     {
         hz4096 = 0,
         hz262144 = 1,
