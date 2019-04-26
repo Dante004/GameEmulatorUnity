@@ -193,7 +193,8 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: -7.258407e-33, z: 7.41e-43, w: -7.2583485e-33}
+  m_BoundingSphereOverride: {x: 7.7371252e+25, y: 4.7019774e-38, z: 3.9614081e+28,
+    w: 2.3509887e-38}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -417,7 +418,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38730521275f064488e746ba96b3de50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Filename: "C:\\Users\\Bartosz B\u0105k\\Desktop\\zelda.gbc"
+  Filename: "C:\\Users\\Bartosz B\u0105k\\Desktop\\pokemon.gb"
   ScreenRenderer: {fileID: 1337048226}
 --- !u!4 &1762427498
 Transform:

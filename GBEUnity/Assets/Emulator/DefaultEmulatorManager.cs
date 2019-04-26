@@ -23,6 +23,9 @@ namespace Emulator
         // Use this for initialization
         void Start()
         {
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
+
             // Init Keyboard mapping
             _keyMapping = new Dictionary<KeyCode, ConsoleBase.Button>();
             _keyMapping.Add(KeyCode.UpArrow, ConsoleBase.Button.Up);
