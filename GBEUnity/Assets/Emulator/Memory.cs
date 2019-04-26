@@ -1,14 +1,10 @@
 ﻿using System;
 using Emulator.Audio;
+using Emulator.Cartridges;
 
 namespace Emulator
 {
-    public interface ICartridge
-    {
-        int ReadByte(int address);
 
-        void WriteByte(int address, int value);
-    }
 
     public enum TimerFrequencyType
     {
