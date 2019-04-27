@@ -1,6 +1,5 @@
 ﻿namespace Emulator.Cartridges
 { 
-
     internal enum RomType
     {
         ROM = 0x00,
@@ -28,6 +27,6 @@
         PocketCamera = 0x1F,
         BandaiTAMA5 = 0xFD,
         HudsonHuC3 = 0xFE,
-        HudsonHuC1 = 0xFF,
+        HudsonHuC1 = 0xFF
     }
 }

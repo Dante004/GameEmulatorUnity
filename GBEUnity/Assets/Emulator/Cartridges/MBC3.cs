@@ -21,9 +21,9 @@ namespace Emulator.Cartridges
             _rom = new byte[romBanks, bankSize];
 
             // Load the ROM
-            for (int i = 0, k = 0; i < romBanks; i++)
+            for (int i = 0, k = 0; i < romBanks; ++i)
             {
-                for (var j = 0; j < bankSize; j++, k++)
+                for (var j = 0; j < bankSize; ++j, ++k)
                 {
                     _rom[i, j] = fileData[k];
                 }

@@ -1,51 +1,41 @@
-﻿#pragma warning disable 0414
-
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Emulator;
-using UnityEngineInternal;
+using Emulator.Cartridges;
 
 namespace Emulator
 {
 	public class Console : ConsoleBase
 	{
-		const float FRAMES_PER_SECOND = 59.7f;
-		const int WIDTH = 160;
-		const int HEIGHT = 144;
-		int MAX_FRAMES_SKIPPED = 10;
-		public long FREQUENCY = Stopwatch.Frequency;
-		public long TICKS_PER_FRAME = (long)(Stopwatch.Frequency / FRAMES_PER_SECOND);
-		private Stopwatch stopwatch = new Stopwatch();
-        private CPU cpu;
-        private Memory memory;
-        private PPU ppu;
-		private double scanLineTicks;
-		private uint[] pixels = new uint[WIDTH * HEIGHT];
-		private Game game;
+		private const float FramesPerSecond = 59.7f;
+		private const int Width = 160;
+		private const int Height = 144;
+		public long ticksPerFrame = (long)(Stopwatch.Frequency / FramesPerSecond);
+		private readonly Stopwatch _stopwatch = new Stopwatch();
+        private CPU _cpu;
+        private Memory _memory;
+        private PPU _ppu;
+		private double _scanLineTicks;
+		private readonly uint[] _pixels = new uint[Width * Height];
+		private Game _game;
 
 		public Console(IVideoOutput video,IAudioOutput audio= null) : base(video, audio)
 		{
-			for (int i = 0; i < pixels.Length; i++)
+			for (var i = 0; i < _pixels.Length; i++)
 			{
-				pixels [i] = 0xFF000000;
+				_pixels [i] = 0xFF000000;
 			}
 
-			Video.SetSize(WIDTH, HEIGHT);
+			Video.SetSize(Width, Height);
 		}
 
 		public override void RunNextStep()
 		{
-			if (stopwatch.ElapsedTicks > TICKS_PER_FRAME)
+			if (_stopwatch.ElapsedTicks > ticksPerFrame)
 			{
 				UpdateModel(true);
-				Video.SetPixels(pixels);
-				stopwatch.Reset();
-				stopwatch.Start();
+				Video.SetPixels(_pixels);
+				_stopwatch.Reset();
+				_stopwatch.Start();
 			} else
 			{
 				UpdateModel(false);
@@ -54,22 +44,22 @@ namespace Emulator
 
 		public override void LoadRom(string name)
 		{
-			game = ROMLoader.Load(name);
-			memory = new Memory();
-            cpu = new CPU(memory);
-            ppu = new PPU(memory);
+			_game = RomLoader.Load(name);
+			_memory = new Memory();
+            _cpu = new CPU(_memory);
+            _ppu = new PPU(_memory);
             if (Audio != null)
-                memory.SoundChip.SetSampleRate(Audio.GetOutputSampleRate());
-            memory.cartridge = game.cartridge;
-			cpu.PowerUp();
+                _memory.SoundChip.SetSampleRate(Audio.GetOutputSampleRate());
+            _memory.cartridge = _game.cartridge;
+			_cpu.PowerUp();
 
-			stopwatch.Reset();
-			stopwatch.Start();
+			_stopwatch.Reset();
+			_stopwatch.Start();
 		}
 
 		public override void SetInput(Button button, bool pressed)
 		{
-			char keyCode = ' ';
+			var keyCode = ' ';
 			switch (button)
 			{
 				case Button.Up:
@@ -98,43 +88,43 @@ namespace Emulator
 					break;
 			}
 
-			memory.KeyChanged(keyCode, pressed);
+			_memory.KeyChanged(keyCode, pressed);
 		}
 
 		private void UpdateModel(bool updateBitmap)
 		{
 			if (updateBitmap)
 			{
-				uint[,] backgroundBuffer = ppu.backgroundBuffer;
-				uint[,] windowBuffer = ppu.windowBuffer;
-				byte[] oam = memory.oam;
+				var backgroundBuffer = _ppu.backgroundBuffer;
+				var windowBuffer = _ppu.windowBuffer;
+				var oam = _memory.oam;
 
-				for (int y = 0, pixelIndex = 0; y < HEIGHT; ++y)
+				for (int y = 0, pixelIndex = 0; y < Height; ++y)
 				{
-					ppu.ly = y;
-                    ppu.lcdcMode = LcdcModeType.SearchingOamRam;
-					if (cpu.lcdcInterruptEnabled
-						&& (ppu.lcdcOamInterruptEnabled
-						|| (ppu.lcdcLycLyCoincidenceInterruptEnabled && ppu.lyCompare == y)))
+					_ppu.ly = y;
+                    _ppu.lcdcMode = LcdcModeType.SearchingOamRam;
+					if (_cpu.lcdcInterruptEnabled
+						&& (_ppu.lcdcOamInterruptEnabled
+						|| (_ppu.lcdcLycLyCoincidenceInterruptEnabled && _ppu.lyCompare == y)))
 					{
-						cpu.lcdcInterruptRequested = true;
+						_cpu.lcdcInterruptRequested = true;
 					}
 					ExecuteProcessor(800);
-					ppu.lcdcMode = LcdcModeType.TransferingData;
+					_ppu.lcdcMode = LcdcModeType.TransferingData;
 					ExecuteProcessor(1720);
 
-					ppu.UpdateWindow();
-					ppu.UpdateBackground();
-					ppu.UpdateSpriteTiles();
+					_ppu.UpdateWindow();
+					_ppu.UpdateBackground();
+					_ppu.UpdateSpriteTiles();
 
-					bool backgroundDisplayed = ppu.backgroundDisplayed;
-					int scrollX = ppu.scrollX;
-					int scrollY = ppu.scrollY;
-					bool windowDisplayed = ppu.windowDisplayed;
-					int windowX = ppu.windowX - 7;
-					int windowY = ppu.windowY;
+					var backgroundDisplayed = _ppu.backgroundDisplayed;
+					var scrollX = _ppu.scrollX;
+					var scrollY = _ppu.scrollY;
+					var windowDisplayed = _ppu.windowDisplayed;
+					var windowX = _ppu.windowX - 7;
+					var windowY = _ppu.windowY;
 
-					for (int x = 0; x < WIDTH; ++x, ++pixelIndex)
+					for (var x = 0; x < Width; ++x, ++pixelIndex)
 					{
 						uint intensity = 0;
 
@@ -143,21 +133,21 @@ namespace Emulator
 							intensity = backgroundBuffer [0xFF & (scrollY + y), 0xFF & (scrollX + x)];
 						}
 
-						if (windowDisplayed && y >= windowY && y < windowY + HEIGHT && x >= windowX && x < windowX + WIDTH
-							&& windowX >= -7 && windowX < WIDTH && windowY >= 0 && windowY < HEIGHT)
+						if (windowDisplayed && y >= windowY && y < windowY + Height && x >= windowX && x < windowX + Width
+							&& windowX >= -7 && windowX < Width && windowY >= 0 && windowY < Height)
 						{
 							intensity = windowBuffer [y - windowY, x - windowX];
 						}
 
-						pixels [pixelIndex] = intensity;
+						_pixels [pixelIndex] = intensity;
 					}
 
-					if (ppu.spritesDisplayed)
+					if (_ppu.spritesDisplayed)
 					{
-						uint[, , ,] spriteTile = ppu.spriteTile;
-						if (ppu.largeSprites)
+						var spriteTile = _ppu.spriteTile;
+						if (_ppu.largeSprites)
 						{
-							for (int address = 0; address < WIDTH; address += 4)
+							for (var address = 0; address < Width; address += 4)
 							{
 								int spriteY = oam [address];
 								int spriteX = oam [address + 1];
@@ -172,47 +162,45 @@ namespace Emulator
 								}
 								spriteX -= 8;
 
-								int spriteTileIndex0 = 0xFE & oam [address + 2];
-								int spriteTileIndex1 = spriteTileIndex0 | 0x01;
-								int spriteFlags = oam [address + 3];
-								bool spritePriority = (0x80 & spriteFlags) == 0x80;
-								bool spriteYFlipped = (0x40 & spriteFlags) == 0x40;
-								bool spriteXFlipped = (0x20 & spriteFlags) == 0x20;
-								int spritePalette = (0x10 & spriteFlags) == 0x10 ? 1 : 0;
+								var spriteTileIndex0 = 0xFE & oam [address + 2];
+								var spriteTileIndex1 = spriteTileIndex0 | 0x01;
+								var spriteFlags = oam [address + 3];
+								var spritePriority = (0x80 & spriteFlags) == 0x80;
+								var spriteYFlipped = (0x40 & spriteFlags) == 0x40;
+								var spriteXFlipped = (0x20 & spriteFlags) == 0x20;
+								var spritePalette = (0x10 & spriteFlags) == 0x10 ? 1 : 0;
 
 								if (spriteYFlipped)
 								{
-									int temp = spriteTileIndex0;
+									var temp = spriteTileIndex0;
 									spriteTileIndex0 = spriteTileIndex1;
 									spriteTileIndex1 = temp;
 								}
 
-								int spriteRow = y - spriteY;
+								var spriteRow = y - spriteY;
 								if (spriteRow >= 0 && spriteRow < 8)
 								{
-									int screenAddress = (y << 7) + (y << 5) + spriteX;
-									for (int x = 0; x < 8; ++x, ++screenAddress)
+									var screenAddress = (y << 7) + (y << 5) + spriteX;
+									for (var x = 0; x < 8; ++x, ++screenAddress)
 									{
-										int screenX = spriteX + x;
-										if (screenX >= 0 && screenX < WIDTH)
+										var screenX = spriteX + x;
+										if (screenX >= 0 && screenX < Width)
 										{
-											uint color = spriteTile [spriteTileIndex0,
+											var color = spriteTile [spriteTileIndex0,
           spriteYFlipped ? 7 - spriteRow : spriteRow,
           spriteXFlipped ? 7 - x : x, spritePalette];
-											if (color > 0)
-											{
-												if (spritePriority)
-												{
-													if (pixels [screenAddress] == 0xFFFFFFFF)
-													{
-														pixels [screenAddress] = color;
-													}
-												} else
-												{
-													pixels [screenAddress] = color;
-												}
-											}
-										}
+                                            if (color <= 0) continue;
+                                            if (spritePriority)
+                                            {
+                                                if (_pixels [screenAddress] == 0xFFFFFFFF)
+                                                {
+                                                    _pixels [screenAddress] = color;
+                                                }
+                                            } else
+                                            {
+                                                _pixels [screenAddress] = color;
+                                            }
+                                        }
 									}
 									continue;
 								}
@@ -220,37 +208,33 @@ namespace Emulator
 								spriteY += 8;
 
 								spriteRow = y - spriteY;
-								if (spriteRow >= 0 && spriteRow < 8)
-								{
-									int screenAddress = (y << 7) + (y << 5) + spriteX;
-									for (int x = 0; x < 8; ++x, ++screenAddress)
-									{
-										int screenX = spriteX + x;
-										if (screenX >= 0 && screenX < WIDTH)
-										{
-											uint color = spriteTile [spriteTileIndex1,
-          spriteYFlipped ? 7 - spriteRow : spriteRow,
-          spriteXFlipped ? 7 - x : x, spritePalette];
-											if (color > 0)
-											{
-												if (spritePriority)
-												{
-													if (pixels [screenAddress] == 0xFFFFFFFF)
-													{
-														pixels [screenAddress] = color;
-													}
-												} else
-												{
-													pixels [screenAddress] = color;
-												}
-											}
-										}
-									}
-								}
-							}
+                                if (spriteRow < 0 || spriteRow >= 8) continue;
+                                {
+                                    var screenAddress = (y << 7) + (y << 5) + spriteX;
+                                    for (var x = 0; x < 8; ++x, ++screenAddress)
+                                    {
+                                        var screenX = spriteX + x;
+                                        if (screenX < 0 || screenX >= Width) continue;
+                                        var color = spriteTile [spriteTileIndex1,
+                                            spriteYFlipped ? 7 - spriteRow : spriteRow,
+                                            spriteXFlipped ? 7 - x : x, spritePalette];
+                                        if (color <= 0) continue;
+                                        if (spritePriority)
+                                        {
+                                            if (_pixels [screenAddress] == 0xFFFFFFFF)
+                                            {
+                                                _pixels [screenAddress] = color;
+                                            }
+                                        } else
+                                        {
+                                            _pixels [screenAddress] = color;
+                                        }
+                                    }
+                                }
+                            }
 						} else
 						{
-							for (int address = 0; address < WIDTH; address += 4)
+							for (var address = 0; address < Width; address += 4)
 							{
 								int spriteY = oam [address];
 								int spriteX = oam [address + 1];
@@ -265,129 +249,127 @@ namespace Emulator
 								}
 								spriteX -= 8;
 
-								int spriteTileIndex = oam [address + 2];
-								int spriteFlags = oam [address + 3];
-								bool spritePriority = (0x80 & spriteFlags) == 0x80;
-								bool spriteYFlipped = (0x40 & spriteFlags) == 0x40;
-								bool spriteXFlipped = (0x20 & spriteFlags) == 0x20;
-								int spritePalette = (0x10 & spriteFlags) == 0x10 ? 1 : 0;
+								var spriteTileIndex = oam [address + 2];
+								var spriteFlags = oam [address + 3];
+								var spritePriority = (0x80 & spriteFlags) == 0x80;
+								var spriteYFlipped = (0x40 & spriteFlags) == 0x40;
+								var spriteXFlipped = (0x20 & spriteFlags) == 0x20;
+								var spritePalette = (0x10 & spriteFlags) == 0x10 ? 1 : 0;
 
-								int spriteRow = y - spriteY;
-								int screenAddress = (y << 7) + (y << 5) + spriteX;
-								for (int x = 0; x < 8; ++x, ++screenAddress)
+								var spriteRow = y - spriteY;
+								var screenAddress = (y << 7) + (y << 5) + spriteX;
+								for (var x = 0; x < 8; ++x, ++screenAddress)
 								{
-									int screenX = spriteX + x;
-									if (screenX >= 0 && screenX < WIDTH)
-									{
-										uint color = spriteTile [spriteTileIndex,
-        spriteYFlipped ? 7 - spriteRow : spriteRow,
-        spriteXFlipped ? 7 - x : x, spritePalette];
-										if (color > 0)
-										{
-											if (spritePriority)
-											{
-												if (pixels [screenAddress] == 0xFFFFFFFF)
-												{
-													pixels [screenAddress] = color;
-												}
-											} else
-											{
-												pixels [screenAddress] = color;
-											}
-										}
-									}
-								}
+									var screenX = spriteX + x;
+                                    if (screenX < 0 || screenX >= Width) continue;
+                                    var color = spriteTile [spriteTileIndex,
+                                        spriteYFlipped ? 7 - spriteRow : spriteRow,
+                                        spriteXFlipped ? 7 - x : x, spritePalette];
+                                    if (color <= 0) continue;
+                                    if (spritePriority)
+                                    {
+                                        if (_pixels [screenAddress] == 0xFFFFFFFF)
+                                        {
+                                            _pixels [screenAddress] = color;
+                                        }
+                                    } else
+                                    {
+                                        _pixels [screenAddress] = color;
+                                    }
+                                }
 							}
 						}
 					}
 
-					ppu.lcdcMode = LcdcModeType.HBlank;
-					if (cpu.lcdcInterruptEnabled && ppu.lcdcHBlankInterruptEnabled)
+					_ppu.lcdcMode = LcdcModeType.HBlank;
+					if (_cpu.lcdcInterruptEnabled && _ppu.lcdcHBlankInterruptEnabled)
 					{
-						cpu.lcdcInterruptRequested = true;
+						_cpu.lcdcInterruptRequested = true;
 					}
 					ExecuteProcessor(2040);
 					AddTicksPerScanLine();
 				}
 			} else
 			{
-				for (int y = 0; y < HEIGHT; ++y)
+				for (var y = 0; y < Height; ++y)
 				{
-					ppu.ly = y;
-					ppu.lcdcMode = LcdcModeType.SearchingOamRam;
-					if (cpu.lcdcInterruptEnabled
-						&& (ppu.lcdcOamInterruptEnabled
-						|| (ppu.lcdcLycLyCoincidenceInterruptEnabled && ppu.lyCompare == y)))
+					_ppu.ly = y;
+					_ppu.lcdcMode = LcdcModeType.SearchingOamRam;
+					if (_cpu.lcdcInterruptEnabled
+						&& (_ppu.lcdcOamInterruptEnabled
+						|| (_ppu.lcdcLycLyCoincidenceInterruptEnabled && _ppu.lyCompare == y)))
 					{
-						cpu.lcdcInterruptRequested = true;
+						_cpu.lcdcInterruptRequested = true;
 					}
 					ExecuteProcessor(800);
-					ppu.lcdcMode = LcdcModeType.TransferingData;
+					_ppu.lcdcMode = LcdcModeType.TransferingData;
 					ExecuteProcessor(1720);
-					ppu.lcdcMode = LcdcModeType.HBlank;
-					if (cpu.lcdcInterruptEnabled && ppu.lcdcHBlankInterruptEnabled)
+					_ppu.lcdcMode = LcdcModeType.HBlank;
+					if (_cpu.lcdcInterruptEnabled && _ppu.lcdcHBlankInterruptEnabled)
 					{
-						cpu.lcdcInterruptRequested = true;
+						_cpu.lcdcInterruptRequested = true;
 					}
 					ExecuteProcessor(2040);
 					AddTicksPerScanLine();
 				}
 			}
 
-			ppu.lcdcMode = LcdcModeType.VBlank;
-			if (cpu.vBlankInterruptEnabled)
+			_ppu.lcdcMode = LcdcModeType.VBlank;
+			if (_cpu.vBlankInterruptEnabled)
 			{
-				cpu.vBlankInterruptRequested = true;
+				_cpu.vBlankInterruptRequested = true;
 			}
-			if (cpu.lcdcInterruptEnabled && ppu.lcdcVBlankInterruptEnabled)
+			if (_cpu.lcdcInterruptEnabled && _ppu.lcdcVBlankInterruptEnabled)
 			{
-				cpu.lcdcInterruptRequested = true;
+				_cpu.lcdcInterruptRequested = true;
 			}
-			for (int y = 144; y <= 153; ++y)
+			for (var y = 144; y <= 153; ++y)
 			{
-				ppu.ly = y;
-				if (cpu.lcdcInterruptEnabled && ppu.lcdcLycLyCoincidenceInterruptEnabled
-					&& ppu.lyCompare == y)
+				_ppu.ly = y;
+				if (_cpu.lcdcInterruptEnabled && _ppu.lcdcLycLyCoincidenceInterruptEnabled
+					&& _ppu.lyCompare == y)
 				{
-					cpu.lcdcInterruptRequested = true;
+					_cpu.lcdcInterruptRequested = true;
 				}
 				ExecuteProcessor(4560);
 				AddTicksPerScanLine();
 			}
             if (Audio != null)
-                memory.SoundChip.OutputSound(Audio);
+                _memory.SoundChip.OutputSound(Audio);
         }
 
 		private void AddTicksPerScanLine()
 		{
-			switch (memory.timerFrequency)
+			switch (_memory.timerFrequency)
 			{
 				case TimerFrequencyType.hz4096:
-					scanLineTicks += 0.44329004329004329004329004329004;
+					_scanLineTicks += 0.44329004329004329004329004329004;
 					break;
 				case TimerFrequencyType.hz16384:
-					scanLineTicks += 1.7731601731601731601731601731602;
+					_scanLineTicks += 1.7731601731601731601731601731602;
 					break;
 				case TimerFrequencyType.hz65536:
-					scanLineTicks += 7.0926406926406926406926406926407;
+					_scanLineTicks += 7.0926406926406926406926406926407;
 					break;
 				case TimerFrequencyType.hz262144:
-					scanLineTicks += 28.370562770562770562770562770563;
+					_scanLineTicks += 28.370562770562770562770562770563;
 					break;
-			}
-			while (scanLineTicks >= 1.0)
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+			while (_scanLineTicks >= 1.0)
 			{
-				scanLineTicks -= 1.0;
-				if (memory.timerCounter == 0xFF)
+				_scanLineTicks -= 1.0;
+				if (_memory.timerCounter == 0xFF)
 				{
-					memory.timerCounter = memory.timerModulo;
-					if (cpu.lcdcInterruptEnabled && cpu.timerOverflowInterruptEnabled)
+					_memory.timerCounter = _memory.timerModulo;
+					if (_cpu.lcdcInterruptEnabled && _cpu.timerOverflowInterruptEnabled)
 					{
-						cpu.timerOverflowInterruptRequested = true;
+						_cpu.timerOverflowInterruptRequested = true;
 					}
 				} else
 				{
-					memory.timerCounter++;
+					_memory.timerCounter++;
 				}
 			}
 		}
@@ -396,14 +378,12 @@ namespace Emulator
 		{
 			do
 			{
-				cpu.Step();
-				if (cpu.halted)
-				{
-					cpu.ticks = ((maxTicks - cpu.ticks) & 0x03);
-					return;
-				}
-			} while (cpu.ticks < maxTicks);
-			cpu.ticks -= maxTicks;
+				_cpu.Step();
+                if (!_cpu.halted) continue;
+                _cpu.ticks = ((maxTicks - _cpu.ticks) & 0x03);
+                return;
+            } while (_cpu.ticks < maxTicks);
+			_cpu.ticks -= maxTicks;
 		}
 	}
 }

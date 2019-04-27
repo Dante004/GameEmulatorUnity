@@ -1,14 +1,11 @@
 ﻿using System.IO;
 using System.Text;
-using Emulator.Cartridges;
 using UnityEngine;
 
-namespace Emulator
-{
-
-    class ROMLoader
+namespace Emulator.Cartridges
+{ 
+    internal class RomLoader
     {
-        //Ładowanie romów
         public static Game Load(string fileName)
         {
             var fileInfo = new FileInfo(fileName);
@@ -18,11 +15,10 @@ namespace Emulator
             fileStream.Close();
 
             return new Game(fileData);
-
         }
     }
 
-    class Game
+    internal class Game
     {
         public string title;
         public bool gameBoyColorGame;
@@ -157,7 +153,7 @@ namespace Emulator
             noSerialTransferCompletionInterruptHandler = fileData[0x0058] == 0xD9;
             noHighToLowOfP10ToP13InterruptHandler = fileData[0x0060] == 0xD9;
 
-            Debug.Log(romType);
+            Debug.Log(ToString());
 
             switch (romType)
             {
@@ -181,7 +177,6 @@ namespace Emulator
                 case RomType.ROM_MBC5:
                 case RomType.ROM_MBC5_RAM:
                 case RomType.ROM_MBC5_RAM_BATT:
-
                     cartridge = new MBC3(fileData, romSize, romBanks);
                     break;
                 default:
@@ -191,9 +186,9 @@ namespace Emulator
             }
         }
 
-        private string ExtractGameTitle(byte[] fileData)
+        private static string ExtractGameTitle(byte[] fileData)
         {
-            var sb = new StringBuilder();
+            var title = new StringBuilder();
             for (var i = 0x0134; i <= 0x0142; ++i)
             {
                 if (fileData[i] == 0x00)
@@ -201,13 +196,13 @@ namespace Emulator
                     break;
                 }
 
-                sb.Append((char) fileData[i]);
+                title.Append((char) fileData[i]);
             }
 
-            return sb.ToString();
+            return title.ToString();
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
             return "title = " + title + "\n"
                    + "game boy color game = " + gameBoyColorGame + "\n"

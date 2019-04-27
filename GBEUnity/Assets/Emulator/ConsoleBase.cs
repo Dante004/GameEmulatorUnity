@@ -1,35 +1,30 @@
-﻿using UnityEngine;
-using System.Collections;
-
-namespace Emulator
+﻿namespace Emulator
 {
 	public abstract class ConsoleBase
 	{
-		public enum Button
-		{
-			Up,
-			Down,
-			Left,
-			Right,
-			A,
-			B,
-			Start,
-			Select}
-		;
+        public enum Button
+        {
+            Up,
+            Down,
+            Left,
+            Right,
+            A,
+            B,
+            Start,
+            Select
+        }
 
-		public IVideoOutput Video
+        public IVideoOutput Video
 		{
 			get;
-			private set;
 		}
 
         public IAudioOutput Audio
         {
             get;
-            private set;
         }
 
-		public ConsoleBase(IVideoOutput video,IAudioOutput audio = null)
+		protected ConsoleBase(IVideoOutput video,IAudioOutput audio = null)
 		{
 			Video = video;
             Audio = audio;

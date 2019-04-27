@@ -4,7 +4,6 @@ namespace Emulator.Cartridges
 {
     public class RomOnly: ICartridge
     {
-
         private readonly byte[] _fileData;
 
         public RomOnly(byte[] fileData)
