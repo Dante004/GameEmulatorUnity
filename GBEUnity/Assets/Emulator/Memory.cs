@@ -424,16 +424,16 @@ namespace Emulator
                             switch (value & 0x03)
                             {
                                 case 0:
-                                    ppu.backgroundPalette[i] = ppu.WHITE;
+                                    ppu.backgroundPalette[i] = ppu.white;
                                     break;
                                 case 1:
-                                    ppu.backgroundPalette[i] = ppu.LIGHT_GRAY;
+                                    ppu.backgroundPalette[i] = ppu.lightGray;
                                     break;
                                 case 2:
-                                    ppu.backgroundPalette[i] = ppu.DARK_GRAY;
+                                    ppu.backgroundPalette[i] = ppu.darkGray;
                                     break;
                                 case 3:
-                                    ppu.backgroundPalette[i] = ppu.BLACK;
+                                    ppu.backgroundPalette[i] = ppu.black;
                                     break;
                             }
                             value >>= 2;
@@ -446,16 +446,16 @@ namespace Emulator
                             switch (value & 0x03)
                             {
                                 case 0:
-                                    ppu.objectPalette0[i] = ppu.WHITE;
+                                    ppu.objectPalette0[i] = ppu.white;
                                     break;
                                 case 1:
-                                    ppu.objectPalette0[i] = ppu.LIGHT_GRAY;
+                                    ppu.objectPalette0[i] = ppu.lightGray;
                                     break;
                                 case 2:
-                                    ppu.objectPalette0[i] = ppu.DARK_GRAY;
+                                    ppu.objectPalette0[i] = ppu.darkGray;
                                     break;
                                 case 3:
-                                    ppu.objectPalette0[i] = ppu.BLACK;
+                                    ppu.objectPalette0[i] = ppu.black;
                                     break;
                             }
                             value >>= 2;
@@ -468,16 +468,16 @@ namespace Emulator
                             switch (value & 0x03)
                             {
                                 case 0:
-                                    ppu.objectPalette1[i] = ppu.WHITE;
+                                    ppu.objectPalette1[i] = ppu.white;
                                     break;
                                 case 1:
-                                    ppu.objectPalette1[i] = ppu.LIGHT_GRAY;
+                                    ppu.objectPalette1[i] = ppu.lightGray;
                                     break;
                                 case 2:
-                                    ppu.objectPalette1[i] = ppu.DARK_GRAY;
+                                    ppu.objectPalette1[i] = ppu.darkGray;
                                     break;
                                 case 3:
-                                    ppu.objectPalette1[i] = ppu.BLACK;
+                                    ppu.objectPalette1[i] = ppu.black;
                                     break;
                             }
                             value >>= 2;
@@ -731,9 +731,9 @@ namespace Emulator
                             for (int i = 3; i >= 0; i--)
                             {
                                 value <<= 2;
-                                if(ppu.backgroundPalette[i] == ppu.BLACK) value |= 3;
-                                if (ppu.backgroundPalette[i] == ppu.DARK_GRAY) value |= 2;
-                                if (ppu.backgroundPalette[i] == ppu.LIGHT_GRAY) value |= 1;
+                                if(ppu.backgroundPalette[i] == ppu.black) value |= 3;
+                                if (ppu.backgroundPalette[i] == ppu.darkGray) value |= 2;
+                                if (ppu.backgroundPalette[i] == ppu.lightGray) value |= 1;
                             }
 
                             return value;
@@ -746,9 +746,9 @@ namespace Emulator
                             for (int i = 3; i >= 0; i--)
                             {
                                 value <<= 2;
-                                if (ppu.objectPalette0[i] == ppu.BLACK) value |= 3;
-                                if (ppu.objectPalette0[i] == ppu.DARK_GRAY) value |= 2;
-                                if (ppu.objectPalette0[i] == ppu.LIGHT_GRAY) value |= 1;
+                                if (ppu.objectPalette0[i] == ppu.black) value |= 3;
+                                if (ppu.objectPalette0[i] == ppu.darkGray) value |= 2;
+                                if (ppu.objectPalette0[i] == ppu.lightGray) value |= 1;
                             }
 
                             return value;
@@ -761,9 +761,9 @@ namespace Emulator
                             for (int i = 3; i >= 0; i--)
                             {
                                 value <<= 2;
-                                if (ppu.objectPalette1[i] == ppu.BLACK) value |= 3;
-                                if (ppu.objectPalette1[i] == ppu.DARK_GRAY) value |= 2;
-                                if (ppu.objectPalette1[i] == ppu.LIGHT_GRAY) value |= 1;
+                                if (ppu.objectPalette1[i] == ppu.black) value |= 3;
+                                if (ppu.objectPalette1[i] == ppu.darkGray) value |= 2;
+                                if (ppu.objectPalette1[i] == ppu.lightGray) value |= 1;
                             }
 
                             return value;

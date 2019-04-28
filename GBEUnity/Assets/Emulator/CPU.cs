@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace Emulator
 {
@@ -23,11 +22,11 @@ namespace Emulator
         public bool vBlankInterruptEnabled;
         public int ticks;
 
-        private Memory memory;
+        private readonly Memory _memory;
 
         public CPU(Memory memory)
         {
-            this.memory = memory;
+            _memory = memory;
             memory.cpu = this;
         }
 
@@ -47,37 +46,37 @@ namespace Emulator
             SP = 0xFFFE;
             PC = 0x0100;
 
-            memory.WriteByte(0xFF05, 0x00); // TIMA
-            memory.WriteByte(0xFF06, 0x00); // TMA
-            memory.WriteByte(0xFF07, 0x00); // TAC
-            memory.WriteByte(0xFF10, 0x80); // NR10
-            memory.WriteByte(0xFF11, 0xBF); // NR11
-            memory.WriteByte(0xFF12, 0xF3); // NR12
-            memory.WriteByte(0xFF14, 0xBF); // NR14
-            memory.WriteByte(0xFF16, 0x3F); // NR21
-            memory.WriteByte(0xFF17, 0x00); // NR22
-            memory.WriteByte(0xFF19, 0xBF); // NR24
-            memory.WriteByte(0xFF1A, 0x7F); // NR30
-            memory.WriteByte(0xFF1B, 0xFF); // NR31
-            memory.WriteByte(0xFF1C, 0x9F); // NR32
-            memory.WriteByte(0xFF1E, 0xBF); // NR33
-            memory.WriteByte(0xFF20, 0xFF); // NR41
-            memory.WriteByte(0xFF21, 0x00); // NR42
-            memory.WriteByte(0xFF22, 0x00); // NR43
-            memory.WriteByte(0xFF23, 0xBF); // NR30
-            memory.WriteByte(0xFF24, 0x77); // NR50
-            memory.WriteByte(0xFF25, 0xF3); // NR51
-            memory.WriteByte(0xFF26, 0xF1); // NR52
-            memory.WriteByte(0xFF40, 0x91); // LCDC
-            memory.WriteByte(0xFF42, 0x00); // SCY
-            memory.WriteByte(0xFF43, 0x00); // SCX
-            memory.WriteByte(0xFF45, 0x00); // LYC
-            memory.WriteByte(0xFF47, 0xFC); // BGP
-            memory.WriteByte(0xFF48, 0xFF); // OBP0
-            memory.WriteByte(0xFF49, 0xFF); // OBP1
-            memory.WriteByte(0xFF4A, 0x00); // WY
-            memory.WriteByte(0xFF4B, 0x00); // WX
-            memory.WriteByte(0xFFFF, 0x00); // IE
+            _memory.WriteByte(0xFF05, 0x00); // TIMA
+            _memory.WriteByte(0xFF06, 0x00); // TMA
+            _memory.WriteByte(0xFF07, 0x00); // TAC
+            _memory.WriteByte(0xFF10, 0x80); // NR10
+            _memory.WriteByte(0xFF11, 0xBF); // NR11
+            _memory.WriteByte(0xFF12, 0xF3); // NR12
+            _memory.WriteByte(0xFF14, 0xBF); // NR14
+            _memory.WriteByte(0xFF16, 0x3F); // NR21
+            _memory.WriteByte(0xFF17, 0x00); // NR22
+            _memory.WriteByte(0xFF19, 0xBF); // NR24
+            _memory.WriteByte(0xFF1A, 0x7F); // NR30
+            _memory.WriteByte(0xFF1B, 0xFF); // NR31
+            _memory.WriteByte(0xFF1C, 0x9F); // NR32
+            _memory.WriteByte(0xFF1E, 0xBF); // NR33
+            _memory.WriteByte(0xFF20, 0xFF); // NR41
+            _memory.WriteByte(0xFF21, 0x00); // NR42
+            _memory.WriteByte(0xFF22, 0x00); // NR43
+            _memory.WriteByte(0xFF23, 0xBF); // NR30
+            _memory.WriteByte(0xFF24, 0x77); // NR50
+            _memory.WriteByte(0xFF25, 0xF3); // NR51
+            _memory.WriteByte(0xFF26, 0xF1); // NR52
+            _memory.WriteByte(0xFF40, 0x91); // LCDC
+            _memory.WriteByte(0xFF42, 0x00); // SCY
+            _memory.WriteByte(0xFF43, 0x00); // SCX
+            _memory.WriteByte(0xFF45, 0x00); // LYC
+            _memory.WriteByte(0xFF47, 0xFC); // BGP
+            _memory.WriteByte(0xFF48, 0xFF); // OBP0
+            _memory.WriteByte(0xFF49, 0xFF); // OBP1
+            _memory.WriteByte(0xFF4A, 0x00); // WY
+            _memory.WriteByte(0xFF4B, 0x00); // WX
+            _memory.WriteByte(0xFFFF, 0x00); // IE
         }
 
         public void Step()
@@ -113,10 +112,10 @@ namespace Emulator
 
             PC &= 0xFFFF;
 
-            int opCode = 0x00;
+            var opCode = 0x00;
             if (!halted)
             {
-                opCode = memory.ReadByte(PC);
+                opCode = _memory.ReadByte(PC);
                 if (stopCounting)
                 {
                     stopCounting = false;
@@ -259,7 +258,7 @@ namespace Emulator
                     LoadImmediate(ref H);
                     break;
                 case 0x27: // DAA
-                    DecimallyAdjustA();
+                    DecimallAdjustA();
                     break;
                 case 0x28: // JR Z,N
                     JumpRelativeIfZero();
@@ -315,7 +314,7 @@ namespace Emulator
                     JumpRelativeIfCarry();
                     break;
                 case 0x39: // ADD HL,SP
-                    AddSPToHL();
+                    AddSptoHl();
                     break;
                 case 0x3A: // LD A,(HLD)
                     ReadByte(ref A, H, L);
@@ -754,7 +753,7 @@ namespace Emulator
                     JumpIfZero();
                     break;
                 case 0xCB:
-                    switch (memory.ReadByte(PC++))
+                    switch (_memory.ReadByte(PC++))
                     {
                         case 0x00: // RLC B
                             RotateLeft(ref B);
@@ -1584,7 +1583,7 @@ namespace Emulator
                     Pop(ref H, ref L);
                     break;
                 case 0xE2: // LD (FF00+C),A
-                    SaveAToC();
+                    SaveAtoC();
                     break;
                 case 0xE5: // PUSH HL
                     Push(H, L);
@@ -1632,10 +1631,10 @@ namespace Emulator
                     Restart(0x0030);
                     break;
                 case 0xF8: // LD HL, SP + dd
-                    LoadHLWithSPPlusImmediate();
+                    LoadHlWithSpPlusImmediate();
                     break;
                 case 0xF9: // LD SP,HL
-                    LoadSPWithHL();
+                    LoadSpWithHl();
                     break;
                 case 0xFA: // LD A, (nn)
                     LoadFromImmediateAddress(ref A);
@@ -1650,7 +1649,7 @@ namespace Emulator
                     Restart(0x0038);
                     break;
                 default:
-                    throw new Exception(string.Format("Unknown instruction: {0:X} at PC={1:X}", opCode, PC));
+                    throw new Exception($"Unknown instruction: {opCode:X} at PC={PC:X}");
             }
         }
 
@@ -1660,7 +1659,7 @@ namespace Emulator
             ticks += 4;
         }
 
-        private void LoadSPWithHL()
+        private void LoadSpWithHl()
         {
             SP = (H << 8) | L;
             ticks += 6;
@@ -1668,19 +1667,19 @@ namespace Emulator
 
         private void LoadAFromImmediate()
         {
-            A = memory.ReadByte(0xFF00 | memory.ReadByte(PC++));
+            A = _memory.ReadByte(0xFF00 | _memory.ReadByte(PC++));
             ticks += 19;
         }
 
         private void LoadAFromC()
         {
-            A = memory.ReadByte(0xFF00 | C);
+            A = _memory.ReadByte(0xFF00 | C);
             ticks += 19;
         }
 
-        private void LoadHLWithSPPlusImmediate()
+        private void LoadHlWithSpPlusImmediate()
         {
-            int offset = memory.ReadByte(PC++);
+            var offset = _memory.ReadByte(PC++);
             if (offset > 0x7F)
             {
                 offset -= 256;
@@ -1716,7 +1715,7 @@ namespace Emulator
 
         private void OffsetStackPointer()
         {
-            int value = memory.ReadByte(PC++);
+            var value = _memory.ReadByte(PC++);
             if (value > 0x7F)
             {
                 value -= 256;
@@ -1725,31 +1724,31 @@ namespace Emulator
             ticks += 20;
         }
 
-        private void SaveAToC()
+        private void SaveAtoC()
         {
-            memory.WriteByte(0xFF00 | C, A);
+            _memory.WriteByte(0xFF00 | C, A);
             ticks += 19;
         }
 
         private void SaveA()
         {
-            memory.WriteByte(memory.ReadWord(PC), A);
+            _memory.WriteByte(_memory.ReadWord(PC), A);
             PC += 2;
             ticks += 13;
         }
 
         private void SaveAWithOffset()
         {
-            memory.WriteByte(0xFF00 | memory.ReadByte(PC++), A);
+            _memory.WriteByte(0xFF00 | _memory.ReadByte(PC++), A);
             ticks += 19;
         }
 
         private void Swap(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             Swap(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
@@ -1761,10 +1760,10 @@ namespace Emulator
 
         private void SetBit(int bit, int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             SetBit(bit, ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
@@ -1776,10 +1775,10 @@ namespace Emulator
 
         private void ResetBit(int bit, int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             ResetBit(bit, ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
@@ -1830,10 +1829,10 @@ namespace Emulator
 
         private void TestBit(int bit, int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             TestBit(bit, value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 4;
         }
         private void TestBit(int bit, int a)
@@ -1913,7 +1912,7 @@ namespace Emulator
         private void Call()
         {
             Push(0xFFFF & (PC + 2));
-            PC = memory.ReadWord(PC);
+            PC = _memory.ReadWord(PC);
             ticks += 17;
         }
 
@@ -1977,7 +1976,7 @@ namespace Emulator
 
         private void Jump()
         {
-            PC = memory.ReadWord(PC);
+            PC = _memory.ReadWord(PC);
             ticks += 10;
         }
 
@@ -2040,14 +2039,14 @@ namespace Emulator
 
         private void Pop(ref int a)
         {
-            a = memory.ReadWord(SP);
+            a = _memory.ReadWord(SP);
             SP += 2;
             ticks += 10;
         }
 
         private void PopAF()
         {
-            int F = 0;
+            var F = 0;
             Pop(ref A, ref F);
             FZ = (F & 0x80) == 0x80;
             FC = (F & 0x40) == 0x40;
@@ -2057,7 +2056,7 @@ namespace Emulator
 
         private void PushAF()
         {
-            int F = 0;
+            var F = 0;
             if (FZ)
             {
                 F |= 0x80;
@@ -2079,28 +2078,28 @@ namespace Emulator
 
         private void Pop(ref int rh, ref int rl)
         {
-            rl = memory.ReadByte(SP++);
-            rh = memory.ReadByte(SP++);
+            rl = _memory.ReadByte(SP++);
+            rh = _memory.ReadByte(SP++);
             ticks += 10;
         }
 
         private void Push(int rh, int rl)
         {
-            memory.WriteByte(--SP, rh);
-            memory.WriteByte(--SP, rl);
+            _memory.WriteByte(--SP, rh);
+            _memory.WriteByte(--SP, rl);
             ticks += 11;
         }
 
         private void Push(int value)
         {
             SP -= 2;
-            memory.WriteWord(SP, value);
+            _memory.WriteWord(SP, value);
             ticks += 11;
         }
 
         private void Or(int addressHigh, int addressLow)
         {
-            Or(memory.ReadByte((addressHigh << 8) | addressLow));
+            Or(_memory.ReadByte((addressHigh << 8) | addressLow));
             ticks += 3;
         }
 
@@ -2116,18 +2115,18 @@ namespace Emulator
 
         private void OrImmediate()
         {
-            Or(memory.ReadByte(PC++));
+            Or(_memory.ReadByte(PC++));
             ticks += 3;
         }
 
         private void XorImmediate()
         {
-            Xor(memory.ReadByte(PC++));
+            Xor(_memory.ReadByte(PC++));
         }
 
         private void Xor(int addressHigh, int addressLow)
         {
-            Xor(memory.ReadByte((addressHigh << 8) | addressLow));
+            Xor(_memory.ReadByte((addressHigh << 8) | addressLow));
         }
 
         private void Xor(int b)
@@ -2141,13 +2140,13 @@ namespace Emulator
 
         private void And(int addressHigh, int addressLow)
         {
-            And(memory.ReadByte((addressHigh << 8) | addressLow));
+            And(_memory.ReadByte((addressHigh << 8) | addressLow));
             ticks += 3;
         }
 
         private void AndImmediate()
         {
-            And(memory.ReadByte(PC++));
+            And(_memory.ReadByte(PC++));
             ticks += 3;
         }
 
@@ -2179,7 +2178,7 @@ namespace Emulator
 
         private void LoadImmediateIntoMemory(int ah, int al)
         {
-            memory.WriteByte((ah << 8) | al, memory.ReadByte(PC++));
+            _memory.WriteByte((ah << 8) | al, _memory.ReadByte(PC++));
             ticks += 10;
         }
 
@@ -2191,11 +2190,11 @@ namespace Emulator
             ticks += 4;
         }
 
-        private void DecimallyAdjustA()
+        private void DecimallAdjustA()
         {
-            int highNibble = A >> 4;
-            int lowNibble = A & 0x0F;
-            bool _FC = true;
+            var highNibble = A >> 4;
+            var lowNibble = A & 0x0F;
+            var _FC = true;
             if (FN)
             {
                 if (FC)
@@ -2326,7 +2325,7 @@ namespace Emulator
 
         private void JumpRelative()
         {
-            int relativeAddress = memory.ReadByte(PC++);
+            var relativeAddress = _memory.ReadByte(PC++);
             if (relativeAddress > 0x7F)
             {
                 relativeAddress -= 256;
@@ -2337,25 +2336,25 @@ namespace Emulator
 
         private void Add(int addressHigh, int addressLow)
         {
-            Add(memory.ReadByte((addressHigh << 8) | addressLow));
+            Add(_memory.ReadByte((addressHigh << 8) | addressLow));
             ticks += 3;
         }
 
         private void AddImmediateWithCarry()
         {
-            AddWithCarry(memory.ReadByte(PC++));
+            AddWithCarry(_memory.ReadByte(PC++));
             ticks += 3;
         }
 
         private void AddWithCarry(int addressHigh, int addressLow)
         {
-            AddWithCarry(memory.ReadByte((addressHigh << 8) | addressLow));
+            AddWithCarry(_memory.ReadByte((addressHigh << 8) | addressLow));
             ticks += 3;
         }
 
         private void AddWithCarry(int b)
         {
-            int carry = FC ? 1 : 0;
+            var carry = FC ? 1 : 0;
             FH = carry + (A & 0x0F) + (b & 0x0F) > 0x0F;
             A += b + carry;
             FC = A > 255;
@@ -2367,13 +2366,13 @@ namespace Emulator
 
         private void SubWithBorrow(int ah, int al)
         {
-            SubWithBorrow(memory.ReadByte((ah << 8) | al));
+            SubWithBorrow(_memory.ReadByte((ah << 8) | al));
             ticks += 3;
         }
 
         private void SubImmediateWithBorrow()
         {
-            SubWithBorrow(memory.ReadByte(PC++));
+            SubWithBorrow(_memory.ReadByte(PC++));
             ticks += 3;
         }
 
@@ -2391,19 +2390,19 @@ namespace Emulator
 
         private void Sub(int ah, int al)
         {
-            Sub(memory.ReadByte((ah << 8) | al));
+            Sub(_memory.ReadByte((ah << 8) | al));
             ticks += 3;
         }
 
         private void Compare(int ah, int al)
         {
-            Compare(memory.ReadByte((ah << 8) | al));
+            Compare(_memory.ReadByte((ah << 8) | al));
             ticks += 3;
         }
 
         private void CompareImmediate()
         {
-            Compare(memory.ReadByte(PC++));
+            Compare(_memory.ReadByte(PC++));
             ticks += 3;
         }
 
@@ -2418,7 +2417,7 @@ namespace Emulator
 
         private void SubImmediate()
         {
-            Sub(memory.ReadByte(PC++));
+            Sub(_memory.ReadByte(PC++));
             ticks += 3;
         }
 
@@ -2435,7 +2434,7 @@ namespace Emulator
 
         private void AddImmediate()
         {
-            Add(memory.ReadByte(PC++));
+            Add(_memory.ReadByte(PC++));
             ticks += 3;
         }
 
@@ -2450,7 +2449,7 @@ namespace Emulator
             ticks += 4;
         }
 
-        private void AddSPToHL()
+        private void AddSptoHl()
         {
             Add(ref H, ref L, SP >> 8, SP & 0xFF);
         }
@@ -2458,7 +2457,7 @@ namespace Emulator
         private void Add(ref int ah, ref int al, int bh, int bl)
         {
             al += bl;
-            int carry = (al > 0xFF) ? 1 : 0;
+            var carry = (al > 0xFF) ? 1 : 0;
             al &= 0xFF;
             FH = carry + (ah & 0x0F) + (bh & 0x0F) > 0x0F;
             ah += bh + carry;
@@ -2470,10 +2469,10 @@ namespace Emulator
 
         private void ShiftLeft(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             ShiftLeft(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
@@ -2489,10 +2488,10 @@ namespace Emulator
 
         private void UnsignedShiftRight(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             UnsignedShiftRight(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
@@ -2508,10 +2507,10 @@ namespace Emulator
 
         private void SignedShiftRight(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             SignedShiftRight(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
@@ -2527,7 +2526,7 @@ namespace Emulator
 
         private void RotateARight()
         {
-            int lowBit = A & 0x01;
+            var lowBit = A & 0x01;
             FC = lowBit == 1;
             A = (A >> 1) | (lowBit << 7);
             FN = false;
@@ -2547,7 +2546,7 @@ namespace Emulator
 
         private void RotateALeftThroughCarry()
         {
-            int highBit = FC ? 1 : 0;
+            var highBit = FC ? 1 : 0;
             FC = A > 0x7F;
             A = ((A << 1) & 0xFF) | highBit;
             FN = false;
@@ -2557,7 +2556,7 @@ namespace Emulator
 
         private void RotateRight(ref int a)
         {
-            int lowBit = a & 0x01;
+            var lowBit = a & 0x01;
             FC = lowBit == 1;
             a = (a >> 1) | (lowBit << 7);
             FZ = a == 0;
@@ -2568,16 +2567,16 @@ namespace Emulator
 
         private void RotateRightThroughCarry(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             RotateRightThroughCarry(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
         private void RotateRightThroughCarry(ref int a)
         {
-            int lowBit = FC ? 0x80 : 0;
+            var lowBit = FC ? 0x80 : 0;
             FC = (a & 0x01) == 1;
             a = (a >> 1) | lowBit;
             FZ = a == 0;
@@ -2588,16 +2587,16 @@ namespace Emulator
 
         private void RotateLeftThroughCarry(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             RotateLeftThroughCarry(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
         private void RotateLeftThroughCarry(ref int a)
         {
-            int highBit = FC ? 1 : 0;
+            var highBit = FC ? 1 : 0;
             FC = (a >> 7) == 1;
             a = ((a << 1) & 0xFF) | highBit;
             FZ = a == 0;
@@ -2608,25 +2607,25 @@ namespace Emulator
 
         private void RotateLeft(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             RotateLeft(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
         private void RotateRight(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int value = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var value = _memory.ReadByte(address);
             RotateRight(ref value);
-            memory.WriteByte(address, value);
+            _memory.WriteByte(address, value);
             ticks += 7;
         }
 
         private void RotateLeft(ref int a)
         {
-            int highBit = a >> 7;
+            var highBit = a >> 7;
             FC = highBit == 1;
             a = ((a << 1) & 0xFF) | highBit;
             FZ = a == 0;
@@ -2637,7 +2636,7 @@ namespace Emulator
 
         private void RotateALeft()
         {
-            int highBit = A >> 7;
+            var highBit = A >> 7;
             FC = highBit == 1;
             A = ((A << 1) & 0xFF) | highBit;
             FN = false;
@@ -2647,46 +2646,46 @@ namespace Emulator
 
         private void LoadFromImmediateAddress(ref int r)
         {
-            r = memory.ReadByte(memory.ReadWord(PC));
+            r = _memory.ReadByte(_memory.ReadWord(PC));
             PC += 2;
             ticks += 13;
         }
 
         private void LoadImmediate(ref int r)
         {
-            r = memory.ReadByte(PC++);
+            r = _memory.ReadByte(PC++);
             ticks += 7;
         }
 
         private void LoadImmediateWord(ref int r)
         {
-            r = memory.ReadWord(PC);
+            r = _memory.ReadWord(PC);
             PC += 2;
             ticks += 10;
         }
 
         private void LoadImmediate(ref int rh, ref int rl)
         {
-            rl = memory.ReadByte(PC++);
-            rh = memory.ReadByte(PC++);
+            rl = _memory.ReadByte(PC++);
+            rh = _memory.ReadByte(PC++);
             ticks += 10;
         }
 
         private void ReadByte(ref int r, int ah, int al)
         {
-            r = memory.ReadByte((ah << 8) | al);
+            r = _memory.ReadByte((ah << 8) | al);
             ticks += 7;
         }
 
         private void WriteByte(int ah, int al, int value)
         {
-            memory.WriteByte((ah << 8) | al, value);
+            _memory.WriteByte((ah << 8) | al, value);
             ticks += 7;
         }
 
         private void WriteWordToImmediateAddress(int value)
         {
-            memory.WriteWord(memory.ReadWord(PC), value);
+            _memory.WriteWord(_memory.ReadWord(PC), value);
             PC += 2;
             ticks += 20;
         }
@@ -2733,19 +2732,19 @@ namespace Emulator
 
         private void DecrementMemory(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int r = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var r = _memory.ReadByte(address);
             Decrement(ref r);
-            memory.WriteByte(address, r);
+            _memory.WriteByte(address, r);
             ticks += 7;
         }
 
         private void IncrementMemory(int ah, int al)
         {
-            int address = (ah << 8) | al;
-            int r = memory.ReadByte(address);
+            var address = (ah << 8) | al;
+            var r = _memory.ReadByte(address);
             Increment(ref r);
-            memory.WriteByte(address, r);
+            _memory.WriteByte(address, r);
             ticks += 7;
         }
 
