@@ -193,7 +193,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 2.3509887e-38, y: 4.6097e-41, z: 0, w: 2.3509887e-38}
+  m_BoundingSphereOverride: {x: 7.2697893e+22, y: 2.644894e+20, z: 1.707776e+19, w: 7.5562946e+31}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -417,8 +417,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38730521275f064488e746ba96b3de50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Filename: "C:\\Users\\Bartosz B\u0105k\\Desktop\\pokemon.gb"
-  ScreenRenderer: {fileID: 1337048226}
+  fileName: "C:\\Users\\Bartosz B\u0105k\\Desktop\\pokemon.gb"
+  screenRenderer: {fileID: 1337048226}
 --- !u!4 &1762427498
 Transform:
   m_ObjectHideFlags: 0
@@ -445,7 +445,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 148e8fedc23f27f48aab728d9f154f3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Gain: 1
+  gain: 1
 --- !u!82 &1762427500
 AudioSource:
   m_ObjectHideFlags: 0

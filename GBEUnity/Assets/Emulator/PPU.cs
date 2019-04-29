@@ -1,4 +1,6 @@
-﻿namespace Emulator
+﻿using System.Collections.Generic;
+
+namespace Emulator
 {
 
     public enum LcdcModeType
@@ -11,11 +13,12 @@
 
     public class PPU
     {
+        public int colorIndex=0;
 
-        public readonly uint white = 0xFFFFFFFF;
-        public readonly uint lightGray = 0xFFAAAAAA;
-        public readonly uint darkGray = 0xFF555555;
-        public readonly uint black = 0xFF000000;
+        public readonly uint[] white = new [] { 0xFFFFFFFF }; 
+        public readonly uint[] lightGray = new[] { 0xFFAAAAAA };
+        public readonly uint[] darkGray = new[] { 0xFF555555 };
+        public readonly uint[] black = new[] { 0xFF000000 };
 
         public bool lcdControlOperationEnabled;
         public bool windowTileMapDisplaySelect;
@@ -51,15 +54,15 @@
         {
             _memory = memory;
             memory.ppu = this;
-            backgroundPalette = new [] { white, lightGray, darkGray, black };
-            objectPalette0 = new [] { white, lightGray, darkGray, black };
-            objectPalette1 = new [] { white, lightGray, darkGray, black };
+            backgroundPalette = new [] { white[colorIndex], lightGray[colorIndex], darkGray[colorIndex], black[colorIndex] };
+            objectPalette0 = new [] { white[colorIndex], lightGray[colorIndex], darkGray[colorIndex], black[colorIndex] };
+            objectPalette1 = new [] { white[colorIndex], lightGray[colorIndex], darkGray[colorIndex], black[colorIndex] };
         }
 
         public void UpdateSpriteTiles()
         {
 
-            for (var i = 0; i < 256; i++)
+            for (var i = 0; i < 256; ++i)
             {
                 if (!spriteTileInvalidated[i] && !invalidateAllSpriteTilesRequest) continue;
                 spriteTileInvalidated[i] = false;
@@ -68,7 +71,7 @@
                 {
                     var lowByte = _memory.videoRam[address++];
                     var highByte = _memory.videoRam[address++] << 1;
-                    for (var x = 7; x >= 0; x--)
+                    for (var x = 7; x >= 0; --x)
                     {
                         var paletteIndex = (0x02 & highByte) | (0x01 & lowByte);
                         lowByte >>= 1;

@@ -49,7 +49,7 @@ namespace Emulator
             _cpu = new CPU(_memory);
             _ppu = new PPU(_memory);
             if (Audio != null)
-                _memory.SoundChip.SetSampleRate(Audio.GetOutputSampleRate());
+                _memory.soundChip.SetSampleRate(Audio.GetOutputSampleRate());
             _memory.cartridge = _game.cartridge;
 			_cpu.PowerUp();
 
@@ -335,7 +335,7 @@ namespace Emulator
 				AddTicksPerScanLine();
 			}
             if (Audio != null)
-                _memory.SoundChip.OutputSound(Audio);
+                _memory.soundChip.OutputSound(Audio);
         }
 
 		private void AddTicksPerScanLine()
