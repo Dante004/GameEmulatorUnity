@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -9,8 +8,8 @@ namespace Emulator
 {
     public class DefaultEmulatorManager : MonoBehaviour
     {
-        public string Filename;
-        public Renderer ScreenRenderer;
+        public string fileName;
+        public Renderer screenRenderer;
 
         public ConsoleBase Emulator
         {
@@ -27,30 +26,31 @@ namespace Emulator
             Application.targetFrameRate = 60;
 
             // Init Keyboard mapping
-            _keyMapping = new Dictionary<KeyCode, ConsoleBase.Button>();
-            _keyMapping.Add(KeyCode.UpArrow, ConsoleBase.Button.Up);
-            _keyMapping.Add(KeyCode.DownArrow, ConsoleBase.Button.Down);
-            _keyMapping.Add(KeyCode.LeftArrow, ConsoleBase.Button.Left);
-            _keyMapping.Add(KeyCode.RightArrow, ConsoleBase.Button.Right);
-            _keyMapping.Add(KeyCode.Z, ConsoleBase.Button.A);
-            _keyMapping.Add(KeyCode.X, ConsoleBase.Button.B);
-            _keyMapping.Add(KeyCode.Space, ConsoleBase.Button.Start);
-            _keyMapping.Add(KeyCode.LeftShift, ConsoleBase.Button.Select);
-
+            _keyMapping = new Dictionary<KeyCode, ConsoleBase.Button>
+            {
+                {KeyCode.UpArrow, ConsoleBase.Button.Up},
+                {KeyCode.DownArrow, ConsoleBase.Button.Down},
+                {KeyCode.LeftArrow, ConsoleBase.Button.Left},
+                {KeyCode.RightArrow, ConsoleBase.Button.Right},
+                {KeyCode.Z, ConsoleBase.Button.A},
+                {KeyCode.X, ConsoleBase.Button.B},
+                {KeyCode.Space, ConsoleBase.Button.Start},
+                {KeyCode.LeftShift, ConsoleBase.Button.Select}
+            };
 
             // Load emulator
             IVideoOutput drawable = new DefaultVideoOutput();
             IAudioOutput audio = GetComponent<AudioManager>();
             Emulator = new Console(drawable,audio);
-            ScreenRenderer.material.mainTexture = ((DefaultVideoOutput)Emulator.Video).Texture;
+            screenRenderer.material.mainTexture = ((DefaultVideoOutput)Emulator.Video).Texture;
             gameObject.GetComponent<AudioSource>().enabled = false;
-            StartCoroutine(LoadRom(Filename));
+            StartCoroutine(LoadRom(fileName));
         }
 
         void Update()
         {
             // Input
-            foreach (KeyValuePair<KeyCode, ConsoleBase.Button> entry in _keyMapping)
+            foreach (var entry in _keyMapping)
             {
                 if (Input.GetKeyDown(entry.Key))
                     Emulator.SetInput(entry.Value, true);
@@ -58,19 +58,17 @@ namespace Emulator
                     Emulator.SetInput(entry.Value, false);
             }
 
-            if (Input.GetKeyDown(KeyCode.T))
-            {
-                byte[] screenshot = ((DefaultVideoOutput)Emulator.Video).Texture.EncodeToPNG();
-                File.WriteAllBytes("./screenshot.png", screenshot);
-                Debug.Log("Screenshot saved.");
-            }
+            if (!Input.GetKeyDown(KeyCode.T)) return;
+            var screenshot = ((DefaultVideoOutput)Emulator.Video).Texture.EncodeToPNG();
+            File.WriteAllBytes("./screenshot.png", screenshot);
+            Debug.Log("Screenshot saved.");
         }
 
 
 
         private IEnumerator LoadRom(string filename)
         {
-            string path = filename;
+            var path = filename;
             Debug.Log("Loading ROM from " + path + ".");
 
             if (!File.Exists(path))
@@ -87,7 +85,6 @@ namespace Emulator
             gameObject.GetComponent<AudioSource>().enabled = true;
             while (true)
             {
-                // Run
                 Emulator.RunNextStep();
 
                 yield return null;

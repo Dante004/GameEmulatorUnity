@@ -1,15 +1,8 @@
-﻿using System;
-using Emulator.Audio;
+﻿using Emulator.Audio;
+using Emulator.Cartridges;
 
 namespace Emulator
 {
-    public interface ICartridge
-    {
-        int ReadByte(int address);
-
-        void WriteByte(int address, int value);
-    }
-
     public enum TimerFrequencyType
     {
         hz4096 = 0,
@@ -43,12 +36,12 @@ namespace Emulator
 
         public CPU cpu;
         public PPU ppu;
-        public SoundChip SoundChip;
-        private readonly int[] soundRegisters = new int[0x30];
+        public SoundChip soundChip;
+        private readonly int[] _soundRegisters = new int[0x30];
 
         public Memory()
         {
-            SoundChip = new SoundChip();
+            soundChip = new SoundChip();
         }
 
 
@@ -60,8 +53,8 @@ namespace Emulator
 
         public int ReadWord(int address)
         {
-            int low = ReadByte(address);
-            int high = ReadByte(address + 1);
+            var low = ReadByte(address);
+            var high = ReadByte(address + 1);
             return (high << 8) | low;
         }
 
@@ -81,7 +74,7 @@ namespace Emulator
             }
             else if (address >= 0x8000 && address <= 0x9FFF)
             {
-                int videoRamIndex = address - 0x8000;
+                var videoRamIndex = address - 0x8000;
                 videoRam[videoRamIndex] = (byte)value;
                 if (address < 0x9000)
                 {
@@ -93,12 +86,12 @@ namespace Emulator
                 }
                 else if (address >= 0x9C00)
                 {
-                    int tileIndex = address - 0x9C00;
+                    var tileIndex = address - 0x9C00;
                     ppu.backgroundTileInvalidated[tileIndex >> 5, tileIndex & 0x1F] = true;
                 }
                 else
                 {
-                    int tileIndex = address - 0x9800;
+                    var tileIndex = address - 0x9800;
                     ppu.backgroundTileInvalidated[tileIndex >> 5, tileIndex & 0x1F] = true;
                 }
             }
@@ -138,161 +131,161 @@ namespace Emulator
                         cpu.vBlankInterruptRequested = (value & 0x01) == 0x01;
                         break;
                     case 0xFF10:
-                        SoundChip.channel1.SetSweep(
+                        soundChip.channel1.SetSweep(
                             (value & 0x70) >> 4,
                             (value & 0x07),
                             (value & 0x08) == 1);
-                        soundRegisters[0x10 - 0x10] = value;
+                        _soundRegisters[0x10 - 0x10] = value;
                         break;
 
                     case 0xFF11:           // Sound channel 1, length and wave duty
-                        SoundChip.channel1.SetDutyCycle((value & 0xC0) >> 6);
-                        SoundChip.channel1.SetLength(value & 0x3F);
-                        soundRegisters[0x11 - 0x10] = value;
+                        soundChip.channel1.SetDutyCycle((value & 0xC0) >> 6);
+                        soundChip.channel1.SetLength(value & 0x3F);
+                        _soundRegisters[0x11 - 0x10] = value;
                         break;
 
                     case 0xFF12:           // Sound channel 1, volume envelope
-                        SoundChip.channel1.SetEnvelope(
+                        soundChip.channel1.SetEnvelope(
                             (value & 0xF0) >> 4,
                             (value & 0x07),
                             (value & 0x08) == 8);
-                        soundRegisters[0x12 - 0x10] = value;
+                        _soundRegisters[0x12 - 0x10] = value;
                         break;
 
                     case 0xFF13:           // Sound channel 1, frequency low
-                        soundRegisters[0x13 - 0x10] = value;
-                        SoundChip.channel1.SetFrequency(
-                            ((soundRegisters[0x14 - 0x10] & 0x07) << 8) + soundRegisters[0x13 - 0x10]);
+                        _soundRegisters[0x13 - 0x10] = value;
+                        soundChip.channel1.SetFrequency(
+                            ((_soundRegisters[0x14 - 0x10] & 0x07) << 8) + _soundRegisters[0x13 - 0x10]);
                         break;
 
                     case 0xFF14:           // Sound channel 1, frequency high
-                        soundRegisters[0x14 - 0x10] = value;
+                        _soundRegisters[0x14 - 0x10] = value;
 
-                        if ((soundRegisters[0x14 - 0x10] & 0x80) != 0)
+                        if ((_soundRegisters[0x14 - 0x10] & 0x80) != 0)
                         {
-                            SoundChip.channel1.SetLength(soundRegisters[0x11 - 0x10] & 0x3F);
-                            SoundChip.channel1.SetEnvelope(
-                                (soundRegisters[0x12 - 0x10] & 0xF0) >> 4,
-                                (soundRegisters[0x12 - 0x10] & 0x07),
-                                (soundRegisters[0x12 - 0x10] & 0x08) == 8);
+                            soundChip.channel1.SetLength(_soundRegisters[0x11 - 0x10] & 0x3F);
+                            soundChip.channel1.SetEnvelope(
+                                (_soundRegisters[0x12 - 0x10] & 0xF0) >> 4,
+                                (_soundRegisters[0x12 - 0x10] & 0x07),
+                                (_soundRegisters[0x12 - 0x10] & 0x08) == 8);
                         }
-                        if ((soundRegisters[0x14 - 0x10] & 0x40) == 0)
+                        if ((_soundRegisters[0x14 - 0x10] & 0x40) == 0)
                         {
-                            SoundChip.channel1.SetLength(-1);
+                            soundChip.channel1.SetLength(-1);
                         }
 
-                        SoundChip.channel1.SetFrequency(
-                            ((soundRegisters[0x14 - 0x10] & 0x07) << 8) + soundRegisters[0x13 - 0x10]);
+                        soundChip.channel1.SetFrequency(
+                            ((_soundRegisters[0x14 - 0x10] & 0x07) << 8) + _soundRegisters[0x13 - 0x10]);
 
                         break;
 
                     case 0xFF17:           // Sound channel 2, volume envelope
-                        SoundChip.channel2.SetEnvelope(
+                        soundChip.channel2.SetEnvelope(
                             (value & 0xF0) >> 4,
                             value & 0x07,
                             (value & 0x08) == 8);
-                        soundRegisters[0x17 - 0x10] = value;
+                        _soundRegisters[0x17 - 0x10] = value;
                         break;
 
                     case 0xFF18:           // Sound channel 2, frequency low
-                        soundRegisters[0x18 - 0x10] = value;
-                        SoundChip.channel2.SetFrequency(
-                            ((soundRegisters[0x19 - 0x10] & 0x07) << 8) + soundRegisters[0x18 - 0x10]);
+                        _soundRegisters[0x18 - 0x10] = value;
+                        soundChip.channel2.SetFrequency(
+                            ((_soundRegisters[0x19 - 0x10] & 0x07) << 8) + _soundRegisters[0x18 - 0x10]);
                         break;
 
                     case 0xFF19:           // Sound channel 2, frequency high
-                        soundRegisters[0x19 - 0x10] = value;
+                        _soundRegisters[0x19 - 0x10] = value;
 
                         if ((value & 0x80) != 0)
                         {
-                            SoundChip.channel2.SetLength(soundRegisters[0x21 - 0x10] & 0x3F);
-                            SoundChip.channel2.SetEnvelope(
-                                (soundRegisters[0x17 - 0x10] & 0xF0) >> 4,
-                                (soundRegisters[0x17 - 0x10] & 0x07),
-                                (soundRegisters[0x17 - 0x10] & 0x08) == 8);
+                            soundChip.channel2.SetLength(_soundRegisters[0x21 - 0x10] & 0x3F);
+                            soundChip.channel2.SetEnvelope(
+                                (_soundRegisters[0x17 - 0x10] & 0xF0) >> 4,
+                                (_soundRegisters[0x17 - 0x10] & 0x07),
+                                (_soundRegisters[0x17 - 0x10] & 0x08) == 8);
                         }
-                        if ((soundRegisters[0x19 - 0x10] & 0x40) == 0)
+                        if ((_soundRegisters[0x19 - 0x10] & 0x40) == 0)
                         {
-                            SoundChip.channel2.SetLength(-1);
+                            soundChip.channel2.SetLength(-1);
                         }
-                        SoundChip.channel2.SetFrequency(
-                            ((soundRegisters[0x19 - 0x10] & 0x07) << 8) + soundRegisters[0x18 - 0x10]);
+                        soundChip.channel2.SetFrequency(
+                            ((_soundRegisters[0x19 - 0x10] & 0x07) << 8) + _soundRegisters[0x18 - 0x10]);
                         break;
 
                     case 0xFF16:           // Sound channel 2, length and wave duty
-                        SoundChip.channel2.SetDutyCycle((value & 0xC0) >> 6);
-                        SoundChip.channel2.SetLength(value & 0x3F);
-                        soundRegisters[0x16 - 0x10] = value;
+                        soundChip.channel2.SetDutyCycle((value & 0xC0) >> 6);
+                        soundChip.channel2.SetLength(value & 0x3F);
+                        _soundRegisters[0x16 - 0x10] = value;
                         break;
 
                     case 0xFF1A:           // Sound channel 3, on/off
                         if ((value & 0x80) != 0)
                         {
-                            SoundChip.channel3.SetVolume((soundRegisters[0x1C - 0x10] & 0x60) >> 5);
+                            soundChip.channel3.SetVolume((_soundRegisters[0x1C - 0x10] & 0x60) >> 5);
                         }
                         else
                         {
-                            SoundChip.channel3.SetVolume(0);
+                            soundChip.channel3.SetVolume(0);
                         }
-                        soundRegisters[0x1A - 0x10] = value;
+                        _soundRegisters[0x1A - 0x10] = value;
                         break;
 
                     case 0xFF1B:           // Sound channel 3, length
-                        soundRegisters[0x1B - 0x10] = value;
-                        SoundChip.channel3.SetLength(value);
+                        _soundRegisters[0x1B - 0x10] = value;
+                        soundChip.channel3.SetLength(value);
                         break;
 
                     case 0xFF1C:           // Sound channel 3, volume
-                        soundRegisters[0x1C - 0x10] = value;
-                        SoundChip.channel3.SetVolume((value & 0x60) >> 5);
+                        _soundRegisters[0x1C - 0x10] = value;
+                        soundChip.channel3.SetVolume((value & 0x60) >> 5);
                         break;
 
                     case 0xFF1D:           // Sound channel 3, frequency lower 8-bit
-                        soundRegisters[0x1D - 0x10] = value;
-                        SoundChip.channel3.SetFrequency(
-                        ((soundRegisters[0x1E - 0x10] & 0x07) << 8) + soundRegisters[0x1D - 0x10]);
+                        _soundRegisters[0x1D - 0x10] = value;
+                        soundChip.channel3.SetFrequency(
+                        ((_soundRegisters[0x1E - 0x10] & 0x07) << 8) + _soundRegisters[0x1D - 0x10]);
                         break;
 
                     case 0xFF1E:           // Sound channel 3, frequency higher 3-bit
-                        soundRegisters[0x1E - 0x10] = value;
-                        if ((soundRegisters[0x19 - 0x10] & 0x80) != 0)
+                        _soundRegisters[0x1E - 0x10] = value;
+                        if ((_soundRegisters[0x19 - 0x10] & 0x80) != 0)
                         {
-                            SoundChip.channel3.SetLength(soundRegisters[0x1B - 0x10]);
+                            soundChip.channel3.SetLength(_soundRegisters[0x1B - 0x10]);
                         }
-                        SoundChip.channel3.SetFrequency(
-                            ((soundRegisters[0x1E - 0x10] & 0x07) << 8) + soundRegisters[0x1D - 0x10]);
+                        soundChip.channel3.SetFrequency(
+                            ((_soundRegisters[0x1E - 0x10] & 0x07) << 8) + _soundRegisters[0x1D - 0x10]);
                         break;
 
                     case 0xFF20:           // Sound channel 4, length
-                        SoundChip.channel4.SetLength(value & 0x3F);
-                        soundRegisters[0x20 - 0x10] = value;
+                        soundChip.channel4.SetLength(value & 0x3F);
+                        _soundRegisters[0x20 - 0x10] = value;
                         break;
 
                     case 0xFF21:           // Sound channel 4, volume envelope
-                        SoundChip.channel4.SetEnvelope(
+                        soundChip.channel4.SetEnvelope(
                         (value & 0xF0) >> 4,
                         (value & 0x07),
                         (value & 0x08) == 8);
-                        soundRegisters[0x21 - 0x10] = value;
+                        _soundRegisters[0x21 - 0x10] = value;
                         break;
 
                     case 0xFF22:           // Sound channel 4, polynomial parameters
-                        SoundChip.channel4.SetParameters(
+                        soundChip.channel4.SetParameters(
                         (value & 0x07),
                         (value & 0x08) == 8,
                         (value & 0xF0) >> 4);
-                        soundRegisters[0x22 - 0x10] = value;
+                        _soundRegisters[0x22 - 0x10] = value;
                         break;
 
                     case 0xFF23:          // Sound channel 4, initial/consecutive
-                        soundRegisters[0x23 - 0x10] = value;
+                        _soundRegisters[0x23 - 0x10] = value;
                         if ((value & 0x80) != 0)
                         {
-                            SoundChip.channel4.SetLength(soundRegisters[0x20 - 0x10] & 0x3F);
+                            soundChip.channel4.SetLength(_soundRegisters[0x20 - 0x10] & 0x3F);
                         }
                         else if (((value & 0x80) & 0x40) == 0)
                         {
-                            SoundChip.channel4.SetLength(-1);
+                            soundChip.channel4.SetLength(-1);
                         }
                         break;
                     case 0xFF24:
@@ -300,7 +293,7 @@ namespace Emulator
                         break;
                     case 0xFF25:           // Stereo select
                         int chanData;
-                        soundRegisters[0x25 - 0x10] = value;
+                        _soundRegisters[0x25 - 0x10] = value;
 
                         chanData = 0;
                         if ((value & 0x01) != 0)
@@ -311,7 +304,7 @@ namespace Emulator
                         {
                             chanData |= SquareWave.ChannelRight;
                         }
-                        SoundChip.channel1.SetChannel(chanData);
+                        soundChip.channel1.SetChannel(chanData);
 
                         chanData = 0;
                         if ((value & 0x02) != 0)
@@ -322,7 +315,7 @@ namespace Emulator
                         {
                             chanData |= SquareWave.ChannelRight;
                         }
-                        SoundChip.channel2.SetChannel(chanData);
+                        soundChip.channel2.SetChannel(chanData);
 
                         chanData = 0;
                         if ((value & 0x04) != 0)
@@ -333,7 +326,7 @@ namespace Emulator
                         {
                             chanData |= VoluntaryWave.ChannelRight;
                         }
-                        SoundChip.channel3.SetChannel(chanData);
+                        soundChip.channel3.SetChannel(chanData);
 
                         chanData = 0;
                         if ((value & 0x08) != 0)
@@ -344,12 +337,12 @@ namespace Emulator
                         {
                             chanData |= Noise.ChannelRight;
                         }
-                        SoundChip.channel4.SetChannel(chanData);
+                        soundChip.channel4.SetChannel(chanData);
 
                         break;
 
                     case 0xFF26:
-                        SoundChip.soundEnabled = (value & 0x80) == 1;
+                        soundChip.soundEnabled = (value & 0x80) == 1;
                         break;
                     case 0xFF30:
                     case 0xFF31:
@@ -367,15 +360,15 @@ namespace Emulator
                     case 0xFF3D:
                     case 0xFF3E:
                     case 0xFF3F:
-                        SoundChip.channel3.SetSamplePair(address - 0xFF30, value);
-                        soundRegisters[address - 0xFF10] = value;
+                        soundChip.channel3.SetSamplePair(address - 0xFF30, value);
+                        _soundRegisters[address - 0xFF10] = value;
                         break;
 
                     case 0xFF40:
                         { // LCDC control
-                            bool _backgroundAndWindowTileDataSelect = ppu.backgroundAndWindowTileDataSelect;
-                            bool _backgroundTileMapDisplaySelect = ppu.backgroundTileMapDisplaySelect;
-                            bool _windowTileMapDisplaySelect = ppu.windowTileMapDisplaySelect;
+                            var backgroundAndWindowTileDataSelect = ppu.backgroundAndWindowTileDataSelect;
+                            var backgroundTileMapDisplaySelect = ppu.backgroundTileMapDisplaySelect;
+                            var windowTileMapDisplaySelect = ppu.windowTileMapDisplaySelect;
 
                             ppu.lcdControlOperationEnabled = (value & 0x80) == 0x80;
                             ppu.windowTileMapDisplaySelect = (value & 0x40) == 0x40;
@@ -386,9 +379,9 @@ namespace Emulator
                             ppu.spritesDisplayed = (value & 0x02) == 0x02;
                             ppu.backgroundDisplayed = (value & 0x01) == 0x01;
 
-                            if (_backgroundAndWindowTileDataSelect != ppu.backgroundAndWindowTileDataSelect
-                                || _backgroundTileMapDisplaySelect != ppu.backgroundTileMapDisplaySelect
-                                || _windowTileMapDisplaySelect != ppu.windowTileMapDisplaySelect)
+                            if (backgroundAndWindowTileDataSelect != ppu.backgroundAndWindowTileDataSelect
+                                || backgroundTileMapDisplaySelect != ppu.backgroundTileMapDisplaySelect
+                                || windowTileMapDisplaySelect != ppu.windowTileMapDisplaySelect)
                             {
                                 ppu.invalidateAllBackgroundTilesRequest = true;
                             }
@@ -416,28 +409,28 @@ namespace Emulator
                         break;
                     case 0xFF46: // Memory Transfer
                         value <<= 8;
-                        for (int i = 0; i < 0x8C; i++)
+                        for (var i = 0; i < 0x8C; ++i)
                         {
                             WriteByte(0xFE00 | i, ReadByte(value | i));
                         }
                         break;
                     case 0xFF47: // Background palette
                         System.Console.WriteLine("[0xFF47] = {0:X}", value);
-                        for (int i = 0; i < 4; i++)
+                        for (var i = 0; i < 4; ++i)
                         {
                             switch (value & 0x03)
                             {
                                 case 0:
-                                    ppu.backgroundPalette[i] = ppu.WHITE;
+                                    ppu.backgroundPalette[i] = ppu.white[ppu.colorIndex];
                                     break;
                                 case 1:
-                                    ppu.backgroundPalette[i] = ppu.LIGHT_GRAY;
+                                    ppu.backgroundPalette[i] = ppu.lightGray[ppu.colorIndex];
                                     break;
                                 case 2:
-                                    ppu.backgroundPalette[i] = ppu.DARK_GRAY;
+                                    ppu.backgroundPalette[i] = ppu.darkGray[ppu.colorIndex];
                                     break;
                                 case 3:
-                                    ppu.backgroundPalette[i] = ppu.BLACK;
+                                    ppu.backgroundPalette[i] = ppu.black[ppu.colorIndex];
                                     break;
                             }
                             value >>= 2;
@@ -445,21 +438,21 @@ namespace Emulator
                         ppu.invalidateAllBackgroundTilesRequest = true;
                         break;
                     case 0xFF48: // Object palette 0
-                        for (int i = 0; i < 4; i++)
+                        for (var i = 0; i < 4; ++i)
                         {
                             switch (value & 0x03)
                             {
                                 case 0:
-                                    ppu.objectPalette0[i] = ppu.WHITE;
+                                    ppu.objectPalette0[i] = ppu.white[ppu.colorIndex];
                                     break;
                                 case 1:
-                                    ppu.objectPalette0[i] = ppu.LIGHT_GRAY;
+                                    ppu.objectPalette0[i] = ppu.lightGray[ppu.colorIndex];
                                     break;
                                 case 2:
-                                    ppu.objectPalette0[i] = ppu.DARK_GRAY;
+                                    ppu.objectPalette0[i] = ppu.darkGray[ppu.colorIndex];
                                     break;
                                 case 3:
-                                    ppu.objectPalette0[i] = ppu.BLACK;
+                                    ppu.objectPalette0[i] = ppu.black[ppu.colorIndex];
                                     break;
                             }
                             value >>= 2;
@@ -467,21 +460,21 @@ namespace Emulator
                         ppu.invalidateAllSpriteTilesRequest = true;
                         break;
                     case 0xFF49: // Object palette 1
-                        for (int i = 0; i < 4; i++)
+                        for (var i = 0; i < 4; ++i)
                         {
                             switch (value & 0x03)
                             {
                                 case 0:
-                                    ppu.objectPalette1[i] = ppu.WHITE;
+                                    ppu.objectPalette1[i] = ppu.white[ppu.colorIndex];
                                     break;
                                 case 1:
-                                    ppu.objectPalette1[i] = ppu.LIGHT_GRAY;
+                                    ppu.objectPalette1[i] = ppu.lightGray[ppu.colorIndex];
                                     break;
                                 case 2:
-                                    ppu.objectPalette1[i] = ppu.DARK_GRAY;
+                                    ppu.objectPalette1[i] = ppu.darkGray[ppu.colorIndex];
                                     break;
                                 case 3:
-                                    ppu.objectPalette1[i] = ppu.BLACK;
+                                    ppu.objectPalette1[i] = ppu.black[ppu.colorIndex];
                                     break;
                             }
                             value >>= 2;
@@ -533,7 +526,7 @@ namespace Emulator
             }
             else if(address >= 0xFF10 && address<0xFF3F)
             {
-                return soundRegisters[address - 0xFF10];
+                return _soundRegisters[address - 0xFF10];
             }
             else
             {
@@ -542,7 +535,7 @@ namespace Emulator
                     case 0xFF00: // key pad
                         if (keyP14)
                         {
-                            int value = 0;
+                            var value = 0;
                             if (!downKeyPressed)
                             {
                                 value |= 0x08;
@@ -567,7 +560,7 @@ namespace Emulator
                         }
                         else if (keyP15)
                         {
-                            int value = 0;
+                            var value = 0;
                             if (!startButtonPressed)
                             {
                                 value |= 0x08;
@@ -601,7 +594,7 @@ namespace Emulator
                     case 0xFF07:
                         {
                             // Time Control
-                            int value = 0;
+                            var value = 0;
                             if (timerRunning)
                             {
                                 value |= 0x04;
@@ -613,7 +606,7 @@ namespace Emulator
                     case 0xFF0F:
                         {
                             // Interrupt Flag (an interrupt request)
-                            int value = 0;
+                            var value = 0;
                             if (cpu.keyPressedInterruptRequested)
                             {
                                 value |= 0x10;
@@ -644,7 +637,7 @@ namespace Emulator
                     case 0xFF40:
                         {
                             // LCDC control
-                            int value = 0;
+                            var value = 0;
                             if (ppu.lcdControlOperationEnabled)
                             {
                                 value |= 0x80;
@@ -690,7 +683,7 @@ namespace Emulator
                     case 0xFF41:
                         {
                             // LCDC Status
-                            int value = 0;
+                            var value = 0;
                             if (ppu.lcdcLycLyCoincidenceInterruptEnabled)
                             {
                                 value |= 0x40;
@@ -731,13 +724,13 @@ namespace Emulator
                         {
                             // Background palette
                             ppu.invalidateAllBackgroundTilesRequest = true;
-                            int value = 0;
-                            for (int i = 3; i >= 0; i--)
+                            var value = 0;
+                            for (var i = 3; i >= 0; --i)
                             {
                                 value <<= 2;
-                                if(ppu.backgroundPalette[i] == ppu.BLACK) value |= 3;
-                                if (ppu.backgroundPalette[i] == ppu.DARK_GRAY) value |= 2;
-                                if (ppu.backgroundPalette[i] == ppu.LIGHT_GRAY) value |= 1;
+                                if(ppu.backgroundPalette[i] == ppu.black[ppu.colorIndex]) value |= 3;
+                                if (ppu.backgroundPalette[i] == ppu.darkGray[ppu.colorIndex]) value |= 2;
+                                if (ppu.backgroundPalette[i] == ppu.lightGray[ppu.colorIndex]) value |= 1;
                             }
 
                             return value;
@@ -746,13 +739,13 @@ namespace Emulator
                         {
                             // Object palette 0
                             ppu.invalidateAllSpriteTilesRequest = true;
-                            int value = 0;
-                            for (int i = 3; i >= 0; i--)
+                            var value = 0;
+                            for (var i = 3; i >= 0; --i)
                             {
                                 value <<= 2;
-                                if (ppu.objectPalette0[i] == ppu.BLACK) value |= 3;
-                                if (ppu.objectPalette0[i] == ppu.DARK_GRAY) value |= 2;
-                                if (ppu.objectPalette0[i] == ppu.LIGHT_GRAY) value |= 1;
+                                if (ppu.objectPalette0[i] == ppu.black[ppu.colorIndex]) value |= 3;
+                                if (ppu.objectPalette0[i] == ppu.darkGray[ppu.colorIndex]) value |= 2;
+                                if (ppu.objectPalette0[i] == ppu.lightGray[ppu.colorIndex]) value |= 1;
                             }
 
                             return value;
@@ -761,13 +754,13 @@ namespace Emulator
                         {
                             // Object palette 1
                             ppu.invalidateAllSpriteTilesRequest = true;
-                            int value = 0;
-                            for (int i = 3; i >= 0; i--)
+                            var value = 0;
+                            for (var i = 3; i >= 0; --i)
                             {
                                 value <<= 2;
-                                if (ppu.objectPalette1[i] == ppu.BLACK) value |= 3;
-                                if (ppu.objectPalette1[i] == ppu.DARK_GRAY) value |= 2;
-                                if (ppu.objectPalette1[i] == ppu.LIGHT_GRAY) value |= 1;
+                                if (ppu.objectPalette1[i] == ppu.black[ppu.colorIndex]) value |= 3;
+                                if (ppu.objectPalette1[i] == ppu.darkGray[ppu.colorIndex]) value |= 2;
+                                if (ppu.objectPalette1[i] == ppu.lightGray[ppu.colorIndex]) value |= 1;
                             }
 
                             return value;
@@ -779,7 +772,7 @@ namespace Emulator
                     case 0xFFFF:
                         {
                             // Interrupt Enable
-                            int value = 0;
+                            var value = 0;
                             if (cpu.keyPressedInterruptEnabled)
                             {
                                 value |= 0x10;

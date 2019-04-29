@@ -9,7 +9,7 @@ namespace Emulator
     public class AudioManager : MonoBehaviour, IAudioOutput
     {
 
-        public float Gain = 0.05f;
+        public float gain = 0.05f;
 
         private int _samplesAvailable;
         private PipeStream _pipeStream;
@@ -17,9 +17,7 @@ namespace Emulator
 
         void Awake()
         {
-            var bufferLength = 0;
-            var numBuffers = 0;
-            AudioSettings.GetDSPBufferSize(out bufferLength, out numBuffers);
+            AudioSettings.GetDSPBufferSize(out var bufferLength, out _);
             _samplesAvailable = bufferLength;
 
             // Prepare our buffer
@@ -40,7 +38,7 @@ namespace Emulator
             var r = _pipeStream.Read(_buffer, 0, data.Length);
             for (var i = 0; i < r; ++i)
             {
-                data[i] = Gain * (sbyte)(_buffer[i]) / 127f;
+                data[i] = gain * (sbyte)(_buffer[i]) / 127f;
             }
         }
 
@@ -66,13 +64,16 @@ namespace Emulator
 
             public long MaxBufferLength
             {
-                get { return _maxBufferLength; }
-                set { _maxBufferLength = value; }
+                get => _maxBufferLength;
+                set => _maxBufferLength = value;
             }
 
             public new void Dispose()
             {
-                _buffer.Clear();
+                lock (_buffer)
+                {
+                    _buffer.Clear();
+                }
             }
 
             public override void Flush()
@@ -103,7 +104,7 @@ namespace Emulator
                 if (count == 0)
                     return 0;
 
-                int readLength = 0;
+                var readLength = 0;
 
                 lock (_buffer)
                 {
@@ -146,30 +147,18 @@ namespace Emulator
                 }
             }
 
-            public override bool CanRead
-            {
-                get { return true; }
-            }
+            public override bool CanRead => true;
 
-            public override bool CanSeek
-            {
-                get { return false; }
-            }
+            public override bool CanSeek => false;
 
-            public override bool CanWrite
-            {
-                get { return true; }
-            }
+            public override bool CanWrite => true;
 
-            public override long Length
-            {
-                get { return _buffer.Count; }
-            }
+            public override long Length => _buffer.Count;
 
             public override long Position
             {
-                get { return 0; }
-                set { throw new NotImplementedException(); }
+                get => 0;
+                set => throw new NotImplementedException();
             }
         }
     }
