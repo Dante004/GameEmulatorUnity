@@ -31,50 +31,60 @@ public class DetectingFiles : MonoBehaviour
             for (int i = 0; i < files.Length; i++)
             {
                 getRom(files[i]);
-                if (!files[i].EndsWith(".meta") && files[i].EndsWith(".gb")||files[i].EndsWith(".gbc") )
+                if (!files[i].EndsWith(".meta") && files[i].EndsWith(".gb") || files[i].EndsWith(".gbc"))
                 {
                     numberOfFiles++;
                     RomGame romGame = ROMLoader.Load(files[i]);
                     /******************************************************************/
-                    
-                        GameObject prefabTitleTmp = Instantiate(titlePrefab) as GameObject;
-                        Text title = prefabTitleTmp.GetComponentInChildren<Text>();
+
+                    GameObject prefabTitleTmp = Instantiate(titlePrefab) as GameObject;
+                    Text title = prefabTitleTmp.GetComponentInChildren<Text>();
+
                     GetHightLight();
                     if (!isHighlited)
                     {
-                        
-                        /////////////////////////////////////////////////////////////////////
-                        title.text = romGame.title.ToString();
-                        /////////////////////////////////////////////////////////////////////
                     }
 
-                    if (title.text != Images.ToString())
+                    /////////////////////////////////////////////////////////////////////
+                    title.text = romGame.title.ToString();
+                    /////////////////////////////////////////////////////////////////////
+
+
+
+                    TMP = romGame.title.ToString();
+                    prefabTitleTmp.transform.SetParent(gameObject.transform, false);
+                    RectTransform rectTitle = prefabTitleTmp.GetComponent<RectTransform>();
+                    rectTitle.localPosition = new Vector2(positionX, 100);
+                    title.fontSize = 50;
+                    title.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    title.verticalOverflow = VerticalWrapMode.Overflow;
+                    title.alignment = TextAnchor.MiddleCenter;
+                    if (!Images.ContainsKey(TMP))
                     {
 
-                    }
-                        TMP = romGame.title.ToString();
-                        prefabTitleTmp.transform.SetParent(gameObject.transform, false);
-                        RectTransform rectTitle = prefabTitleTmp.GetComponent<RectTransform>();
-                        rectTitle.localPosition = new Vector2(positionX, 100);
-                        title.fontSize = 50;
-                        title.horizontalOverflow = HorizontalWrapMode.Overflow;
-                        title.verticalOverflow = VerticalWrapMode.Overflow;
-                        title.alignment = TextAnchor.MiddleCenter;
+                        TMP = "DEFAULT";
                         title.alignByGeometry = Images[TMP];
-                    
+                    }
+                    else
+                    {
+
+                        title.alignByGeometry = Images[TMP];
+                    }
+
+
                     /*******************************************************************/
                     posters = Directory.GetFileSystemEntries("Assets\\Resources");
                     prefabTitleTmp.GetComponentInChildren<Image>().sprite = Images[TMP];
                     prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.localPosition = new Vector2(40, -170);
                     prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.sizeDelta = new Vector2(250, 250);
-                    
+
                 }
                 positionY -= 30;
-                positionX -= 200;
+                positionX -= 400;
             }
         }
     }
-     void Update()
+    void Update()
     {
 
         if (TMP.Length > titlePrefab.transform.GetComponentInChildren<Image>().flexibleWidth)
@@ -96,7 +106,7 @@ public class DetectingFiles : MonoBehaviour
     }
     public void getRom(string path)
     {
-        if (!path.EndsWith(".meta") && path.EndsWith(".gb")|| path.EndsWith(".gbc"))
+        if (!path.EndsWith(".meta") && path.EndsWith(".gb") || path.EndsWith(".gbc"))
         {
             numberOfFiles++;
             FileInfo Files = new FileInfo(path);
