@@ -20,7 +20,6 @@ public class DetectingFiles : MonoBehaviour
     public int numberOfPosters = 0;
     public Sprite sprite;
     public string TMP;
-    public bool isHighlited = false;
     
     public float letterPaused = 0.01f;    
     public string message;
@@ -37,7 +36,7 @@ public class DetectingFiles : MonoBehaviour
             for (int i = 0; i < files.Length; i++)
             {
                 getRom(files[i]);
-                if (!files[i].EndsWith(".meta") && files[i].EndsWith(".gb") || files[i].EndsWith(".gbc"))
+                if (!files[i].EndsWith(".meta")  && files[i].EndsWith(".gb") || files[i].EndsWith(".gbc"))
                 {
                     numberOfFiles++;
                     RomGame romGame = ROMLoader.Load(files[i]);
@@ -45,11 +44,6 @@ public class DetectingFiles : MonoBehaviour
 
                     GameObject prefabTitleTmp = Instantiate(titlePrefab) as GameObject;
                     Text title = prefabTitleTmp.GetComponentInChildren<Text>();
-
-                    GetHightLight();
-                    if (!isHighlited)
-                    {
-                    }
                     /////////////////////////////////////////////////////////////////////
                     title.text = romGame.title.ToString();
                     /////////////////////////////////////////////////////////////////////
@@ -77,10 +71,10 @@ public class DetectingFiles : MonoBehaviour
                     prefabTitleTmp.GetComponentInChildren<Image>().sprite = Images[TMP];
                     prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.localPosition = new Vector2(40, -170);
                     prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.sizeDelta = new Vector2(250, 250);
-                    
+                    positionY += 30;
+                    positionX += 470;
                 }
-                positionY += 30;
-                positionX += 470;
+               
             }
             
         }
@@ -94,23 +88,12 @@ public class DetectingFiles : MonoBehaviour
         {
             transform.Translate(Vector2.left * Time.deltaTime);
         }
-        if (Input.GetKey(KeyCode.DownArrow))
-        {
-            isHighlited = true;
-        }
+
     }
 
     public void getImageWith(Sprite sprite)
     {
         
-    }
-    public void GetHightLight()
-    {
-        if (Input.GetKey(KeyCode.DownArrow))
-        {
-            isHighlited = true;
-        }
-
     }
     public void getRom(string path)
     {

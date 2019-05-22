@@ -20,11 +20,9 @@ public class move : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             
-            if (transform.localPosition.x > -320)
+            if (transform.localPosition.x > -300)
             {
                 transform.Translate(Vector2.left * (Time.deltaTime + 0.9f));
-                Debug.Log("przekorczono ramke");
-               
             }
         }
         if (Input.GetKey(KeyCode.RightArrow))
@@ -32,7 +30,6 @@ public class move : MonoBehaviour
             
             if (transform.localPosition.x < 320)
             {
-                Debug.Log("przekrocono ramke");
                 transform.Translate(Vector2.right * (Time.deltaTime + 0.9f));
             }
         }
