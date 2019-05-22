@@ -15,13 +15,26 @@ public class move : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        int border = 150;
+
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            transform.Translate(Vector2.left * (Time.deltaTime + 1f));
+            
+            if (transform.localPosition.x > -320)
+            {
+                transform.Translate(Vector2.left * (Time.deltaTime + 0.9f));
+                Debug.Log("przekorczono ramke");
+               
+            }
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            transform.Translate(Vector2.right * (Time.deltaTime + 1f));
+            
+            if (transform.localPosition.x < 320)
+            {
+                Debug.Log("przekrocono ramke");
+                transform.Translate(Vector2.right * (Time.deltaTime + 0.9f));
+            }
         }
 
         if (Input.GetKey(KeyCode.Space))
