@@ -10,28 +10,27 @@ public class move2 : MonoBehaviour
     {
 
     }
-
     private int countOfLeftKeyPressed = 0;
     private int countOfRightKeyPresssed = 0;
     // Update is called once per frame
     void Update()
     {
+        
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             countOfLeftKeyPressed++;
             if (countOfLeftKeyPressed % 2 == 0)
             {
-                transform.Translate(Vector2.right * (Time.deltaTime + 1.2f));
+                transform.Translate(Vector2.right * (Time.deltaTime + 1.5f));
             }
 
-            Debug.Log(countOfLeftKeyPressed);
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
             countOfRightKeyPresssed++;
             if (countOfRightKeyPresssed % 2 == 0)
             {
-                transform.Translate(Vector2.left * (Time.deltaTime + 1.2f));
+                transform.Translate(Vector2.left * (Time.deltaTime + 1.5f));
             }
         }
 
