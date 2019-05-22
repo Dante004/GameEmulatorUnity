@@ -21,8 +21,14 @@ public class DetectingFiles : MonoBehaviour
     public Sprite sprite;
     public string TMP;
     public bool isHighlited = false;
+    
+    public float letterPaused = 0.01f;    
+    public string message;
+    public Text textComp;
+   
     void Start()
     {
+
         if (Directory.Exists(Path.GetFullPath("Roms")))
         {
 
@@ -44,13 +50,9 @@ public class DetectingFiles : MonoBehaviour
                     if (!isHighlited)
                     {
                     }
-
                     /////////////////////////////////////////////////////////////////////
                     title.text = romGame.title.ToString();
                     /////////////////////////////////////////////////////////////////////
-
-
-
                     TMP = romGame.title.ToString();
                     prefabTitleTmp.transform.SetParent(gameObject.transform, false);
                     RectTransform rectTitle = prefabTitleTmp.GetComponent<RectTransform>();
@@ -59,31 +61,32 @@ public class DetectingFiles : MonoBehaviour
                     title.horizontalOverflow = HorizontalWrapMode.Overflow;
                     title.verticalOverflow = VerticalWrapMode.Overflow;
                     title.alignment = TextAnchor.MiddleCenter;
+
                     if (!Images.ContainsKey(TMP))
                     {
-
                         TMP = "DEFAULT";
-                        title.alignByGeometry = Images[TMP];
+                        title.alignByGeometry = Images[TMP];                       
                     }
                     else
-                    {
-
-                        title.alignByGeometry = Images[TMP];
+                    {                        
+                        title.alignByGeometry = Images[TMP];   
                     }
-
-
+                    
                     /*******************************************************************/
                     posters = Directory.GetFileSystemEntries("Assets\\Resources");
                     prefabTitleTmp.GetComponentInChildren<Image>().sprite = Images[TMP];
                     prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.localPosition = new Vector2(40, -170);
                     prefabTitleTmp.transform.GetComponentInChildren<Image>().rectTransform.sizeDelta = new Vector2(250, 250);
-
+                    
                 }
-                positionY -= 30;
-                positionX -= 400;
+                positionY += 30;
+                positionX += 470;
             }
+            
         }
+        
     }
+
     void Update()
     {
 
@@ -95,6 +98,11 @@ public class DetectingFiles : MonoBehaviour
         {
             isHighlited = true;
         }
+    }
+
+    public void getImageWith(Sprite sprite)
+    {
+        
     }
     public void GetHightLight()
     {
