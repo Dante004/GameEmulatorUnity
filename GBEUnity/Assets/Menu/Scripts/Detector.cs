@@ -7,6 +7,17 @@ using UnityEngine.UI;
 
 public class Detector : MonoBehaviour
 {
+    private int _xOffset = -6;
+    private const float CoolDownSlow = 0.3f;
+    private const float CoolDownFast = 0.1f;
+    private float _coolDownMove = 0.3f;
+    private float _movingTime = 0;
+    private float _fasterTime = 0;
+
+    public List<string> tiles = new List<string>();
+    public string[] files;
+    public int menuPosition = 0;
+    public Text title;
     void Start()
     {
         var pathToRomes = Path.GetFullPath("Roms");
@@ -43,10 +54,54 @@ public class Detector : MonoBehaviour
         {
             Directory.CreateDirectory(pathToRomes);
         }
-        // Update is called once per frame
+        
         void Update()
         {
+            title.text = tiles[menuPosition];
 
+            var horizontalKeyPressed = Input.GetAxisRaw("Horizontal");
+
+            _movingTime -= Time.deltaTime;
+            _fasterTime += Time.deltaTime;
+
+            if ((int)horizontalKeyPressed != 0 && _fasterTime > 0.5f)
+            {
+                _coolDownMove = CoolDownFast;
+            }
+            else if ((int)horizontalKeyPressed == 0)
+            {
+                _coolDownMove = CoolDownSlow;
+                _fasterTime = 0;
+            }
+
+            if ((int)horizontalKeyPressed == 1 && _movingTime < 0)
+            {
+                menuPosition++;
+                _movingTime = _coolDownMove;
+                gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
+                                                                                         .localPosition.x - 290, 0, 0);
+            }
+            else if ((int)horizontalKeyPressed == -1 && _movingTime < 0)
+            {
+                menuPosition--;
+                _movingTime = _coolDownMove;
+                gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
+                                                                                         .localPosition.x + 290, 0, 0);
+            }
+
+            if (menuPosition > tiles.Count - 1)
+            {
+                menuPosition = tiles.Count - 1;
+                gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
+                                                                                         .localPosition.x + 290, 0, 0);
+            }
+            else if (menuPosition < 0)
+            {
+                menuPosition = 0;
+                gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
+                                                                                         .localPosition.x - 290, 0, 0);
+            }
+         
         }
     }
 }
