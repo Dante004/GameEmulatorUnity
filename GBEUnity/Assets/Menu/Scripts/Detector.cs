@@ -101,7 +101,11 @@ public class Detector : MonoBehaviour
                 gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
                                                                                          .localPosition.x - 290, 0, 0);
             }
-         
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                PlayerPrefs.SetString("file", files[menuPosition]);
+                SceneManager.LoadScene(1, LoadSceneMode.Single);
+            }
         }
     }
 }
