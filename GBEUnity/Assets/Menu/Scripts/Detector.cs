@@ -39,7 +39,10 @@ public class Detector : MonoBehaviour
                 }
             }
         }
-
+        else
+        {
+            Directory.CreateDirectory(pathToRomes);
+        }
         // Update is called once per frame
         void Update()
         {
