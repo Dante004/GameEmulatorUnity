@@ -130,6 +130,7 @@ GameObject:
   m_Component:
   - component: {fileID: 109697442}
   - component: {fileID: 109697443}
+  - component: {fileID: 109697444}
   m_Layer: 5
   m_Name: roms
   m_TagString: Untagged
@@ -163,9 +164,25 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 109697441}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 21f0fce6f2532ac42b3b14251782c554, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tiles: []
+  files: []
+  menuPosition: 0
+  title: {fileID: 1595113244}
+--- !u!114 &109697444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109697441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d2cdb9211588434cbf60b4d2b7b699d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   tiles: []
@@ -650,7 +667,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -250, y: 70}
+  m_AnchoredPosition: {x: -249.99998, y: 70}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1595113244
