@@ -5,7 +5,7 @@ namespace Emulator.Cartridges
 {
     public class MBC3 : ICartridge
     {
-        private const int RamBank = 4;
+        private const int RamBank = 8;
         private const int RamBankSize = 8192;
         private int _selectedRomBank = 1;
         private int _selectedRamBank = 0;
@@ -76,7 +76,7 @@ namespace Emulator.Cartridges
         {
             if (address <= 0x1FFF)
             {
-                _ramRTCEnambleFlag = (value & 0x0F) == 0x0A;
+                _ramRTCEnambleFlag = (value & 0x0A) == 0x0A;
             }
             else if (address >= 0x2000 && address <= 0x3FFF)
             {
