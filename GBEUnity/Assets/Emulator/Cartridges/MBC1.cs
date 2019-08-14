@@ -11,11 +11,13 @@ namespace Emulator.Cartridges
         private int _selectedRamBank;
         private readonly byte[,] _ram = new byte[RamBank, RamBankSize];
         private readonly byte[,] _rom;
+        private bool _ramEnable;
 
         public MBC1(byte[] fileData, int romSize, int romBanks)
         {
             var bankSize = romSize / romBanks;
             _rom = new byte[romBanks, bankSize];
+            _ramEnable = false;
             for (int i = 0, k = 0; i < romBanks; ++i)
             {
                 for (var j = 0; j < bankSize; ++j, ++k)
@@ -35,7 +37,7 @@ namespace Emulator.Cartridges
             {
                 return _rom[_selectedRomBank, address - 0x4000];
             }
-            if (address >= 0xA000 && address <= 0xBFFF)
+            if (address >= 0xA000 && address <= 0xBFFF && _ramEnable)
             {
                 return _ram[_selectedRamBank, address - 0xA000];
             }
@@ -45,6 +47,10 @@ namespace Emulator.Cartridges
 
         public void WriteByte(int address, int value)
         {
+            if (address >= 0x0000 && address <= 0x1FFF)
+            {
+                _ramEnable = (value & 0x0A) == 0x0A;
+            }
             if (address >= 0xA000 && address <= 0xBFFF)
             {
                 _ram[_selectedRamBank, address - 0xA000] = (byte)(0xFF & value);
@@ -55,12 +61,7 @@ namespace Emulator.Cartridges
             }
             else if (address >= 0x2000 && address <= 0x3FFF)
             {
-                var selectedRomBankLow = 0x1F & value;
-                if (selectedRomBankLow == 0x00)
-                {
-                    selectedRomBankLow++;
-                }
-                _selectedRomBank = (_selectedRomBank & 0x60) | selectedRomBankLow;
+                SelectRomBank(value);
             }
             else if (address >= 0x4000 && address <= 0x5FFF)
             {
@@ -70,9 +71,23 @@ namespace Emulator.Cartridges
                 }
                 else
                 {
-                    _selectedRomBank = (_selectedRomBank & 0x1F) | ((0x03 & value) << 5);
+                    SelectRomBank((0x03 & value) << 5);
                 }
             }
+        }
+
+        private void SelectRomBank(int value)
+        {
+            var selectedRomBankLow = 0x1F & value;
+            if (selectedRomBankLow == 0x00 ||
+                selectedRomBankLow == 0x20 ||
+                selectedRomBankLow == 0x40 ||
+                selectedRomBankLow == 0x60)
+            {
+                selectedRomBankLow++;
+            }
+
+            _selectedRomBank = selectedRomBankLow;
         }
     }
 }
