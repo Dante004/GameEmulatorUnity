@@ -15,7 +15,7 @@ public class Detector : MonoBehaviour
     private float _fasterTime = 0;
 
     public List<string> tiles = new List<string>();
-    public string[] files;
+    public List<string> fileArray = new List<string>();
     public int menuPosition = 0;
     public Text title;
 
@@ -27,11 +27,12 @@ public class Detector : MonoBehaviour
 
         if (Directory.Exists(pathToRomes))
         {
-            files = Directory.GetFileSystemEntries(pathToRomes);
+            var files = Directory.GetFileSystemEntries(pathToRomes);
             foreach (var file in files)
             {
-                if (!file.EndsWith(".meta") && file.EndsWith(".gb") || file.EndsWith(".gbc"))
+                if (!file.EndsWith(".meta") && (file.EndsWith(".gb") || file.EndsWith(".gbc")))
                 {
+                    fileArray.Add(file);
                     var romGame = ROMLoader.Load(file);
 
                     var romObject = new GameObject($"{romGame.title} Root");
@@ -106,7 +107,7 @@ public class Detector : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            PlayerPrefs.SetString("file", files[menuPosition]);
+            PlayerPrefs.SetString("file", fileArray[menuPosition]);
             SceneManager.LoadScene(1, LoadSceneMode.Single);
         }
     }

@@ -2,13 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 
 namespace Emulator
 {
     public class DefaultEmulatorManager : MonoBehaviour
     {
-        public string fileName;
+        private string _fileName;
         public Renderer screenRenderer;
 
         public ConsoleBase Emulator
@@ -24,6 +25,8 @@ namespace Emulator
         {
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
+
+            _fileName = PlayerPrefs.GetString("file");
 
             // Init Keyboard mapping
             _keyMapping = new Dictionary<KeyCode, ConsoleBase.Button>
@@ -44,7 +47,7 @@ namespace Emulator
             Emulator = new Console(drawable,audio);
             screenRenderer.material.mainTexture = ((DefaultVideoOutput)Emulator.Video).Texture;
             gameObject.GetComponent<AudioSource>().enabled = false;
-            StartCoroutine(LoadRom(fileName));
+            StartCoroutine(LoadRom(_fileName));
         }
 
         void Update()
@@ -56,6 +59,12 @@ namespace Emulator
                     Emulator.SetInput(entry.Value, true);
                 else if (Input.GetKeyUp(entry.Key))
                     Emulator.SetInput(entry.Value, false);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                PlayerPrefs.DeleteKey("file");
+                SceneManager.LoadScene(0, LoadSceneMode.Single);
             }
 
             if (!Input.GetKeyDown(KeyCode.T)) return;
