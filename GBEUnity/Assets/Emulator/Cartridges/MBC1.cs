@@ -51,7 +51,7 @@ namespace Emulator.Cartridges
             {
                 _ramEnable = (value & 0x0A) == 0x0A;
             }
-            if (address >= 0xA000 && address <= 0xBFFF)
+            if (address >= 0xA000 && address <= 0xBFFF && _ramEnable)
             {
                 _ram[_selectedRamBank, address - 0xA000] = (byte)(0xFF & value);
             }
