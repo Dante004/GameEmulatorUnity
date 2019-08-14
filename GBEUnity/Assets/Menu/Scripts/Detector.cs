@@ -82,27 +82,27 @@ public class Detector : MonoBehaviour
             menuPosition++;
             _movingTime = _coolDownMove;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
-                                                                                     .localPosition.x - 290, 0, 0);
+                                                                                     .localPosition.x - 287, 0, 0);
         }
         else if ((int)h == -1 && _movingTime < 0)
         {
             menuPosition--;
             _movingTime = _coolDownMove;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
-                                                                                     .localPosition.x + 290, 0, 0);
+                                                                                     .localPosition.x + 287, 0, 0);
         }
 
         if (menuPosition > tiles.Count - 1)
         {
             menuPosition = tiles.Count - 1;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
-                                                                                     .localPosition.x + 290, 0, 0);
+                                                                                     .localPosition.x + 287, 0, 0);
         }
         else if (menuPosition < 0)
         {
             menuPosition = 0;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
-                                                                                     .localPosition.x - 290, 0, 0);
+                                                                                     .localPosition.x - 287, 0, 0);
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
