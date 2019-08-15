@@ -21,10 +21,6 @@ namespace Emulator.Cartridges
                 var ramBankSize = ramSize / ramBanks;
                 _ram = new byte[ramBanks, ramBankSize];
             }
-            else
-            {
-                _ram = new byte[0,0];
-            }
             _ramEnable = false;
             for (int i = 0, k = 0; i < romBanks; ++i)
             {
@@ -88,7 +84,7 @@ namespace Emulator.Cartridges
             }
             else if (address >= 0xA000 && address <= 0xBFFF)
             {
-                if (_ramEnable)
+                if (_ramEnable && _ram != null)
                 {
                     _ram[_selectedRamBank, address - 0xA000] = (byte)(0xFF & value);
                 }
@@ -96,6 +92,10 @@ namespace Emulator.Cartridges
                 {
                     Debug.LogError($"Attempting write on ram when ram is disabled: {address:X}, {value:X}");
                 }
+            }
+            else
+            {
+                Debug.LogError($"Invalid cartridge write: {address:X}, {value:X}");
             }
         }
 
