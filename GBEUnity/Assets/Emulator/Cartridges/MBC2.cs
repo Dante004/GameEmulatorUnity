@@ -57,6 +57,7 @@ namespace Emulator.Cartridges
             {
                 _ram[address - 0xA000] = (byte)(0x0F & value);
             }
+            Debug.LogError($"Invalid cartridge write: {address:X}, {value:X}");
         }
     }
 }

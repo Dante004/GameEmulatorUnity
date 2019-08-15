@@ -7,8 +7,8 @@ namespace Emulator.Cartridges
         private bool _ramBankingMode;
         private int _selectedRomBank = 1;
         private int _selectedRamBank;
-        private int _romBanks;
-        private int _ramBanks;
+        private readonly int _romBanks;
+        private readonly int _ramBanks;
         private readonly byte[,] _ram;
         private readonly byte[,] _rom;
         private bool _ramEnable;
@@ -52,7 +52,15 @@ namespace Emulator.Cartridges
             }
             if (address >= 0xA000 && address <= 0xBFFF)
             {
-                return _ramEnable ? _ram[_selectedRamBank, address - 0xA000] : 0xFF;
+                if (_ramEnable)
+                {
+                    return _ram[_selectedRamBank, address - 0xA000];
+                }
+                else
+                {
+                    Debug.LogError($"Attempting read on ram when ram is disabled: {address:X}");
+                    return 0xFF;
+                }
             }
             Debug.LogError($"Invalid cartridge read: {address:X}");
             return 0;
@@ -91,10 +99,18 @@ namespace Emulator.Cartridges
             {
                 _ramBankingMode = (value & 0x01) == 0x01;
             }
-            if (address >= 0xA000 && address <= 0xBFFF && _ramEnable)
+            if (address >= 0xA000 && address <= 0xBFFF)
             {
-                _ram[_selectedRamBank, address - 0xA000] = (byte)(0xFF & value);
+                if (_ramEnable)
+                {
+                    _ram[_selectedRamBank, address - 0xA000] = (byte)(0xFF & value);
+                }
+                else
+                {
+                    Debug.LogError($"Attempting write on ram when ram is disabled: {address:X}, {value:X}");
+                }
             }
+            Debug.LogError($"Invalid cartridge write: {address:X}, {value:X}");
         }
 
         private void SelectRomBank(int value)

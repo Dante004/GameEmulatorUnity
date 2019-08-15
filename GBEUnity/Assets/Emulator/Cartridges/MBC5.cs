@@ -77,7 +77,7 @@ namespace Emulator.Cartridges
             }
             else
             {
-                Debug.LogError($"Invalid cartridge write: {address:X}");
+                Debug.LogError($"Invalid cartridge write: {address:X}, {value:X}");
             }
         }
     }
