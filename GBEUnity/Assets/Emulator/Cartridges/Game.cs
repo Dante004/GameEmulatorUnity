@@ -163,7 +163,7 @@ namespace Emulator.Cartridges
                 case RomType.ROM_MBC1:
                 case RomType.ROM_MBC1_RAM:
                 case RomType.ROM_MBC1_RAM_BATT:
-                    cartridge = new MBC1(fileData, romSize, romBanks);
+                    cartridge = new MBC1(fileData, romSize, romBanks, ramSize, ramBanks);
                     break;
                 case RomType.ROM_MBC2:
                 case RomType.ROM_MBC2_BATTERY:
@@ -174,10 +174,12 @@ namespace Emulator.Cartridges
                 case RomType.ROM_MBC3_RAM_BATT:
                 case RomType.ROM_MBC3_TIMER_BATT:
                 case RomType.ROM_MBC3_TIMER_RAM_BATT:
+                    cartridge = new MBC3(fileData, romSize, romBanks, ramSize, ramBanks);
+                    break;
                 case RomType.ROM_MBC5:
                 case RomType.ROM_MBC5_RAM:
                 case RomType.ROM_MBC5_RAM_BATT:
-                    cartridge = new MBC3(fileData, romSize, romBanks);
+                    cartridge = new MBC5(fileData, romSize, romBanks, ramSize, ramBanks);
                     break;
                 default:
                     Debug.LogError($"Cannot emulate cartridge type {romType}");
