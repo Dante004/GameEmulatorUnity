@@ -1,6 +1,4 @@
-﻿using System;
-using Emulator.Cartridges;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Emulator.Cartridges
 {
@@ -40,9 +38,16 @@ namespace Emulator.Cartridges
             {
                 return _rom[_selectedRomBank, address - 0x4000];
             }
-            else if (address >= 0xA000 && address <= 0xBFFF && _ramEnable)
+            else if (address >= 0xA000 && address <= 0xBFFF)
             {
-                return _ram[_selectedRamBank, address - 0xA000];
+                if (_ramEnable)
+                {
+                    return _ram[_selectedRamBank, address - 0xA000];
+                }
+                else
+                {
+                    return 0xFF;
+                }
             }
             Debug.LogError($"Invalid cartridge read: {address:X}");
             return 0;
@@ -52,7 +57,7 @@ namespace Emulator.Cartridges
         {
             if (address <= 0x1FFF)
             {
-                _ramEnable = (value & 0x0A) == 0x0A;
+                _ramEnable = (value & 0x0F) == 0x0A;
             }
             else if (address >= 0x2000 && address <= 0x2FFF)
             {
