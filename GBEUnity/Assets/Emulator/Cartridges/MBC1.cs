@@ -7,8 +7,6 @@ namespace Emulator.Cartridges
         private bool _ramBankingMode;
         private int _selectedRomBank = 1;
         private int _selectedRamBank;
-        private readonly int _romBanks;
-        private readonly int _ramBanks;
         private readonly byte[,] _ram;
         private readonly byte[,] _rom;
         private bool _ramEnable;
@@ -35,9 +33,6 @@ namespace Emulator.Cartridges
                     _rom[i, j] = fileData[k];
                 }
             }
-
-            _romBanks = romBanks;
-            _ramBanks = ramBanks;
         }
 
         public int ReadByte(int address)
@@ -46,11 +41,11 @@ namespace Emulator.Cartridges
             {
                 return _rom[0, address];
             }
-            if (address >= 0x4000 && address <= 0x7FFF)
+            else if (address >= 0x4000 && address <= 0x7FFF)
             {
                 return _rom[_selectedRomBank, address - 0x4000];
             }
-            if (address >= 0xA000 && address <= 0xBFFF)
+            else if (address >= 0xA000 && address <= 0xBFFF)
             {
                 if (_ramEnable)
                 {
@@ -70,25 +65,17 @@ namespace Emulator.Cartridges
         {
             if (address >= 0x0000 && address <= 0x1FFF)
             {
-                _ramEnable = (value & 0x0F) == 0x0A;
+                _ramEnable = (value & 0x0A) == 0x0A;
             }
             else if (address >= 0x2000 && address <= 0x3FFF)
             {
-                if (!_ramBankingMode)
-                {
-                    SelectRomBank((value & 0x1F) | (0x03 & value) << 5);
-                }
-                else
-                {
-                    SelectRomBank(value & 0x1F);
-                }
+                SelectRomBank(value & 0x1F);
             }
             else if (address >= 0x4000 && address <= 0x5FFF)
             {
                 if (_ramBankingMode)
                 {
                     _selectedRamBank = 0x03 & value;
-                    _selectedRamBank &= _ramBanks - 1;
                 }
                 else
                 {
@@ -99,7 +86,7 @@ namespace Emulator.Cartridges
             {
                 _ramBankingMode = (value & 0x01) == 0x01;
             }
-            if (address >= 0xA000 && address <= 0xBFFF)
+            else if (address >= 0xA000 && address <= 0xBFFF)
             {
                 if (_ramEnable)
                 {
@@ -110,7 +97,6 @@ namespace Emulator.Cartridges
                     Debug.LogError($"Attempting write on ram when ram is disabled: {address:X}, {value:X}");
                 }
             }
-            Debug.LogError($"Invalid cartridge write: {address:X}, {value:X}");
         }
 
         private void SelectRomBank(int value)
@@ -125,7 +111,6 @@ namespace Emulator.Cartridges
             }
 
             _selectedRomBank = selectedRomBankLow;
-            _selectedRomBank &= _romBanks - 1;
         }
     }
 }
