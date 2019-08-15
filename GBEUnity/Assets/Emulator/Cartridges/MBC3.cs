@@ -5,22 +5,23 @@ namespace Emulator.Cartridges
 {
     public class MBC3 : ICartridge
     {
-        private const int RamBank = 8;
-        private const int RamBankSize = 8192;
         private int _selectedRomBank = 1;
         private int _selectedRamBank = 0;
         private int _rtcRegister = 0;
-        private readonly byte[,] _ram = new byte[RamBank, RamBankSize];
+        private readonly byte[,] _ram;
         private readonly byte[,] _rom;
         private bool _rtcEnable = false;
         private bool _ramEnable = false;
         private DateTime _latchClock;
         private int _latchClockData = 0x01;
 
-        public MBC3(byte[] fileData, int romSize, int romBanks)
+        public MBC3(byte[] fileData, int romSize, int romBanks, int ramSize, int ramBanks)
         {
             var bankSize = romSize / romBanks;
             _rom = new byte[romBanks, bankSize];
+
+            var ramBankSize = ramSize / ramBanks;
+            _ram = new byte[ramBanks, ramBankSize];
 
             // Load the ROM
             for (int i = 0, k = 0; i < romBanks; ++i)
@@ -59,7 +60,7 @@ namespace Emulator.Cartridges
                 }
                 else if (_rtcEnable)
                 {
-                    Debug.LogError("Get RTC register");
+                    Debug.Log("Get RTC register");
                     switch (_rtcRegister)
                     {
                         case 0x08:
