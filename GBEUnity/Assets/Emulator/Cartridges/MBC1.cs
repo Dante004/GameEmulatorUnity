@@ -52,14 +52,7 @@ namespace Emulator.Cartridges
             }
             if (address >= 0xA000 && address <= 0xBFFF)
             {
-                if (_ramEnable)
-                {
-                    return _ram[_selectedRamBank, address - 0xA000];
-                }
-                else
-                {
-                    return 0xFF;
-                }
+                return _ramEnable ? _ram[_selectedRamBank, address - 0xA000] : 0xFF;
             }
             Debug.LogError($"Invalid cartridge read: {address:X}");
             return 0;

@@ -4,7 +4,7 @@ namespace Emulator.Cartridges
 {
     public class MBC2 : ICartridge
     {
-        private const int RamSize = 512;
+        private const int RamSize = 512 * 4;
         private int _selectedRomBank = 1;
         private readonly byte[] _ram = new byte[RamSize];
         private readonly byte[,] _rom;
@@ -34,9 +34,9 @@ namespace Emulator.Cartridges
             {
                 return _rom[_selectedRomBank, address - 0x4000];
             }
-            else if (address >= 0xA000 && address <= 0xA1FF && _ramEnabled)
+            else if (address >= 0xA000 && address <= 0xA1FF)
             {
-                return _ram[address - 0xA000];
+                return _ramEnabled ? _ram[address - 0xA000] : 0xFF;
             }
             Debug.LogError($"Invalid cartridge read: {address:X}");
             return 0;
@@ -46,15 +46,16 @@ namespace Emulator.Cartridges
         {
             if (address >= 0x0000 && address <= 0x1FFF && (address & 0x0100) == 0)
             {
-                _ramEnabled = (value & 0xF) == 0xA;
-            }
-            else if (address >= 0xA000 && address <= 0xA1FF && _ramEnabled)
-            {
-                _ram[address - 0xA000] = (byte)(0x0F & value);
+                _ramEnabled = (value & 0x0F) == 0x0A;
             }
             else if (address >= 0x2000 && address <= 0x3FFF && (address & 0x0100) == 1)
             {
                 _selectedRomBank = 0x0F & value;
+                if (_selectedRomBank == 0) _selectedRomBank = 1;
+            }
+            else if (address >= 0xA000 && address <= 0xA1FF && _ramEnabled)
+            {
+                _ram[address - 0xA000] = (byte)(0x0F & value);
             }
         }
     }
