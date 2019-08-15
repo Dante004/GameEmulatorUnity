@@ -4,27 +4,40 @@ namespace Emulator.Cartridges
 {
     public class MBC1 : ICartridge
     {
-        private const int RamBank = 4;
-        private const int RamBankSize = 8192;
         private bool _ramBankingMode;
         private int _selectedRomBank = 1;
         private int _selectedRamBank;
-        private readonly byte[,] _ram = new byte[RamBank, RamBankSize];
+        private int _romBanks;
+        private int _ramBanks;
+        private readonly byte[,] _ram;
         private readonly byte[,] _rom;
         private bool _ramEnable;
 
-        public MBC1(byte[] fileData, int romSize, int romBanks)
+        public MBC1(byte[] fileData, int romSize, int romBanks, int ramSize, int ramBanks)
         {
-            var bankSize = romSize / romBanks;
-            _rom = new byte[romBanks, bankSize];
+            _ramBankingMode = false;
+            var romBankSize = romSize / romBanks;
+            _rom = new byte[romBanks, romBankSize];
+            if (ramSize != 0 || ramBanks != 0)
+            {
+                var ramBankSize = ramSize / ramBanks;
+                _ram = new byte[ramBanks, ramBankSize];
+            }
+            else
+            {
+                _ram = new byte[0,0];
+            }
             _ramEnable = false;
             for (int i = 0, k = 0; i < romBanks; ++i)
             {
-                for (var j = 0; j < bankSize; ++j, ++k)
+                for (var j = 0; j < romBankSize; ++j, ++k)
                 {
                     _rom[i, j] = fileData[k];
                 }
             }
+
+            _romBanks = romBanks;
+            _ramBanks = ramBanks;
         }
 
         public int ReadByte(int address)
@@ -37,9 +50,16 @@ namespace Emulator.Cartridges
             {
                 return _rom[_selectedRomBank, address - 0x4000];
             }
-            if (address >= 0xA000 && address <= 0xBFFF && _ramEnable)
+            if (address >= 0xA000 && address <= 0xBFFF)
             {
-                return _ram[_selectedRamBank, address - 0xA000];
+                if (_ramEnable)
+                {
+                    return _ram[_selectedRamBank, address - 0xA000];
+                }
+                else
+                {
+                    return 0xFF;
+                }
             }
             Debug.LogError($"Invalid cartridge read: {address:X}");
             return 0;
@@ -49,36 +69,44 @@ namespace Emulator.Cartridges
         {
             if (address >= 0x0000 && address <= 0x1FFF)
             {
-                _ramEnable = (value & 0x0A) == 0x0A;
-            }
-            if (address >= 0xA000 && address <= 0xBFFF && _ramEnable)
-            {
-                _ram[_selectedRamBank, address - 0xA000] = (byte)(0xFF & value);
-            }
-            else if (address >= 0x6000 && address <= 0x7FFF)
-            {
-                _ramBankingMode = (value & 0x01) == 0x01;
+                _ramEnable = (value & 0x0F) == 0x0A;
             }
             else if (address >= 0x2000 && address <= 0x3FFF)
             {
-                SelectRomBank(value);
+                if (!_ramBankingMode)
+                {
+                    SelectRomBank((value & 0x1F) | (0x03 & value) << 5);
+                }
+                else
+                {
+                    SelectRomBank(value & 0x1F);
+                }
             }
             else if (address >= 0x4000 && address <= 0x5FFF)
             {
                 if (_ramBankingMode)
                 {
                     _selectedRamBank = 0x03 & value;
+                    _selectedRamBank &= _ramBanks - 1;
                 }
                 else
                 {
-                    SelectRomBank((0x03 & value) << 5);
+                    SelectRomBank((value & 0x1F) | (0x03 & value) << 5);
                 }
+            }
+            else if (address >= 0x6000 && address <= 0x7FFF)
+            {
+                _ramBankingMode = (value & 0x01) == 0x01;
+            }
+            if (address >= 0xA000 && address <= 0xBFFF && _ramEnable)
+            {
+                _ram[_selectedRamBank, address - 0xA000] = (byte)(0xFF & value);
             }
         }
 
         private void SelectRomBank(int value)
         {
-            var selectedRomBankLow = 0x1F & value;
+            var selectedRomBankLow = value;
             if (selectedRomBankLow == 0x00 ||
                 selectedRomBankLow == 0x20 ||
                 selectedRomBankLow == 0x40 ||
@@ -88,6 +116,7 @@ namespace Emulator.Cartridges
             }
 
             _selectedRomBank = selectedRomBankLow;
+            _selectedRomBank &= _romBanks - 1;
         }
     }
 }
