@@ -79,7 +79,9 @@ public class Detector : MonoBehaviour
 
         if ((int)h == 1 && _movingTime < 0)
         {
+            Debug.Log(menuPosition);
             menuPosition++;
+            getRomPosition(menuPosition);
             _movingTime = _coolDownMove;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
                                                                                      .localPosition.x - 287, 0, 0);
@@ -87,6 +89,7 @@ public class Detector : MonoBehaviour
         else if ((int)h == -1 && _movingTime < 0)
         {
             menuPosition--;
+            getRomPosition(menuPosition);
             _movingTime = _coolDownMove;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
                                                                                      .localPosition.x + 287, 0, 0);
@@ -110,5 +113,9 @@ public class Detector : MonoBehaviour
             PlayerPrefs.SetString("file", fileArray[menuPosition]);
             SceneManager.LoadScene(1, LoadSceneMode.Single);
         }
+    }
+    void getRomPosition(int numberOfRom)
+    {
+            Debug.Log(numberOfRom);
     }
 }
