@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-using Emulator.DebugTools;
 using Emulator.Memories;
 using UnityEngine.SceneManagement;
 #if UNITY_EDITOR
