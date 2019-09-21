@@ -379,12 +379,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1337048224}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 10, y: 10, z: 1}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_Father: {fileID: 1762427498}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1762427496
 GameObject:
@@ -395,8 +395,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1762427498}
-  - component: {fileID: 1762427497}
   - component: {fileID: 1762427499}
+  - component: {fileID: 1762427497}
+  - component: {fileID: 1762427501}
   - component: {fileID: 1762427500}
   m_Layer: 0
   m_Name: Emualtor
@@ -414,11 +415,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1762427496}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38730521275f064488e746ba96b3de50, type: 3}
+  m_Script: {fileID: 11500000, guid: 0fa3cb662ea7a43a1b04fec3a2a3e714, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fileName: "C:\\Users\\Bartosz B\u0105k\\Desktop\\pokemon.gb"
-  screenRenderer: {fileID: 1337048226}
+  writeLog: 0
+  enableBreakPoints: 1
+  breakPoints: []
+  memoryBreakPoints: []
 --- !u!4 &1762427498
 Transform:
   m_ObjectHideFlags: 0
@@ -429,7 +432,8 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 1337048228}
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -442,18 +446,33 @@ MonoBehaviour:
   m_GameObject: {fileID: 1762427496}
   m_Enabled: 1
   m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44801cbb60c4349d6b6b5a418cec3227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fileName: 
+  outputMaterial: {fileID: 2100000, guid: 08f2f356a4eeec04fa2424789d273f13, type: 2}
+  paused: 0
+--- !u!114 &1762427500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762427496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 148e8fedc23f27f48aab728d9f154f3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gain: 1
---- !u!82 &1762427500
+  gain: 0.05
+--- !u!82 &1762427501
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1762427496}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
@@ -502,7 +521,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
