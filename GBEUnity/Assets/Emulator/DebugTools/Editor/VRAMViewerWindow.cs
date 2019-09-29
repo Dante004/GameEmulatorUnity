@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
+/*
 namespace Emulator.Debugger {
 
 	public class VRAMViewerWindow : EditorWindow {
@@ -157,4 +157,4 @@ namespace Emulator.Debugger {
 			}
 		}
 	}
-}
+}*/
