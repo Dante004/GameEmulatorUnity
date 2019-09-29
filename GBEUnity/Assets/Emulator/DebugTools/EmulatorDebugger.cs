@@ -11,6 +11,13 @@ using UnityEditor;
 namespace Emulator.Debugger
 {
 
+    public enum GbVersion
+    {
+        DMG,
+        Color,
+        Super
+    }
+
     public class EmulatorDebugger : MonoBehaviour
     {
 
@@ -112,25 +119,22 @@ namespace Emulator.Debugger
 
         public bool writeLog = false;
 
-        [Header("Breakpoints")] [HideInInspector]
-        public bool enableBreakPoints = true;
-
-        [HideInInspector] public List<Breakpoint> breakPoints = new List<Breakpoint>();
-        [HideInInspector] public List<Breakpoint> memoryBreakPoints = new List<Breakpoint>();
-
         Coroutine updateCoroutine;
 
         private IAudioOutput _audio;
+
+        public GbVersion version;
 
         void Awake()
         {
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
 
-            emu = this.GetComponent<Emulator>();
+            emu = GetComponent<Emulator>();
             emu.OnEmulatorStep += OnEmulatorStepUpdate;
             _audio = GetComponent<AudioManager>();
             emu._audio = _audio;
+            emu.version = version;
             GetComponent<AudioSource>().enabled = false;
         }
 
@@ -189,19 +193,6 @@ namespace Emulator.Debugger
                 writer.WriteLine(string.Format("{0:X4}: {1}", emu.cpu.registers.PC,
                     OperationNameAtAddress(emu.cpu.registers.PC)));
             }
-            /*
-            if (enableBreakPoints)
-            {
-                for (int i = 0; i < breakPoints.Count; i++)
-                {
-                    if (breakPoints[i].IsActivated(emu.cpu.registers.PC, emu))
-                    {
-                        emu.paused = true;
-                        break;
-                    }
-                }
-            }
-            */
         }
 
         #endregion

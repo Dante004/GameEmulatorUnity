@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Emulator.Debugger;
 using UnityEngine;
 using Emulator.Graphics;
 using Emulator.Memories;
@@ -34,6 +35,7 @@ namespace Emulator
 		bool skipBios = true;
 
         public IAudioOutput _audio;
+        public GbVersion version;
 
         void Awake()
         {
@@ -42,7 +44,7 @@ namespace Emulator
 
 		private void Init()
 		{
-			memory = new Memory();
+			memory = new Memory(version);
 			cpu = new CPU(memory);
 			ppu = new PPU(memory);
 			timer = new Timer(memory);
@@ -139,7 +141,7 @@ namespace Emulator
 
 		void SimulateBiosStartup()
 		{
-			cpu.registers.AF = 0x01B0; //0x01=GB/SGB, 0xFF=GBP, 0x11=GBC
+            cpu.registers.AF = (ushort) (version == GbVersion.Color ? 0x11B0 : 0x01B0); //0x01=GB/SGB, 0xFF=GBP, 0x11=GBC
 			cpu.registers.BC = 0x0013;
 			cpu.registers.DE = 0x00D8;
 			cpu.registers.HL = 0x014D;
@@ -172,7 +174,7 @@ namespace Emulator
 			memory.Write((ushort)0xFF23, (byte)0xBF);
 			memory.Write((ushort)0xFF24, (byte)0x77);
 			memory.Write((ushort)0xFF25, (byte)0xF3);
-			memory.Write((ushort)0xFF26, (byte)0xF1);
+			memory.Write((ushort)0xFF26, (byte)(version == GbVersion.Super ? 0xF0 : 0xF1));
 
 			memory.Write((ushort)0xFF40, (byte)0x91);
 			memory.Write((ushort)0xFF41, (byte)0x85);
