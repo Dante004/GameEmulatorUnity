@@ -2,6 +2,9 @@
 using System.IO;
 using Emulator.Audio;
 using Emulator.Cartridge;
+using Emulator.Debugger;
+using Emulator.Graphics;
+using Emulator.Timers;
 
 namespace Emulator.Memories {
 	public class Memory {
@@ -9,11 +12,16 @@ namespace Emulator.Memories {
 		public event Action<Memory, ushort> OnMemoryWritten;
 
         private byte[] _bios = {};
-        private readonly byte[] _memory = new byte[0x10000];
+        private byte[] _highRam = new byte[256];
+        private byte[] _workRam = new byte[8 * 1024];
+        private byte[] _io = new byte[256];
+        private byte[] _vram = new byte[8 * 1024];
+        private byte[] _oam = new byte[256];
         private ICartridge _rom;
-        private CartridgeType _cartType;
 
-		private byte _joypadButtons = 0x0F;
+        private GbVersion _version;
+
+        private byte _joypadButtons = 0x0F;
 		private byte _joypadDirections = 0x0F;
 
         public bool inBios = true;
@@ -21,17 +29,22 @@ namespace Emulator.Memories {
         public SoundChip soundChip;
         private readonly byte[] _soundRegisters = new byte[0x30];
 
-		public Memory()
+        public PPU ppu;
+        public Timer timer;
+
+		public Memory(GbVersion version)
 		{
+            _version = version;
             _joypadButtons = 0x0F;
 			_joypadDirections = 0x0F;
 
             soundChip = new SoundChip();
-
+            /*
             //IO starts in general with FF (bgb)
             for (int i = 0xFF00; i < 0xFF4C; i++) {
 				Write((ushort)i, (byte)0xFF);
 			}
+            */
         }
 
 
@@ -47,49 +60,96 @@ namespace Emulator.Memories {
         }
 
 
-        public byte Read(ushort address) {
-			var result = (byte)0;
+        public byte Read(ushort address)
+        {
+            var result = (byte) 0;
 
-			//Exit bios when address is 0x0100
-			inBios = (inBios && address != 0x0100);
+            //Exit bios when address is 0x0100
+            inBios = (inBios && address != 0x0100);
 
             if (inBios && address < 0x0100)
             {
                 result = _bios[address];
             }
             //Switchable ROM
-            else if (address < 0x8000) {
-				result = _rom.ReadByte(address);
-			}
-            else if (address >= 0xFF10 && address < 0xFF3F)
+            else if (address < 0x8000 || (address >= 0xA000 && address <= 0xBFFF))
+            {
+                result = _rom.ReadByte(address);
+            }
+            else if (address >= 0x8000 && address <= 0x9FFF)
+            {
+                result = _vram[address - 0x8000];
+            }
+            else if (address >= 0xC000 && address <= 0xDFFF)
+            {
+                result = _workRam[address - 0xC000];
+            }
+            else if (address >= 0xE000 && address <= 0xFDFF)
+            {
+                result = _workRam[address - 0xC000];
+            }
+            else if (address >= 0xFE00 && address <= 0xFEFF)
+            {
+                result = _oam[address - 0xFE00];
+            }
+            else if (address >= 0xFF80 && address <= 0xFFFE)
+            {
+                result = _highRam[0xFF & address];
+            }
+            else if (address >= 0xFF10 && address <= 0xFF3F)
             {
                 result = _soundRegisters[address - 0xFF10];
             }
-            //Joypad read
-            else if (address == 0xFF00) {
+            else
+            {
+                switch (address & 0xFF)
+                {
+                    case 0x00:
+                        var tmp = _io[0];
+                        var h = tmp & 0xF0;
+                        var l = tmp & 0x0F;
 
-				var tmp = _memory[0xFF00];
-				var h = tmp & 0xF0;
-				var l = tmp & 0x0F;
+                        //Select direction
+                        if ((h & 0x20) != 0x00)
+                        {
+                            l = _joypadDirections;
+                        }
+                        else if ((h & 0x10) != 0x00)
+                        {
+                            l = _joypadButtons;
+                        }
 
-				//Select direction
-				if ((h & 0x20) != 0x00) {
-					l = _joypadDirections;
-				} else if ((h & 0x10) != 0x00) {
-					l = _joypadButtons;
-				}
-
-				result = (byte)(h + l);
-
-			} else {
-				result = _memory[address];
-			}
-
+                        result = (byte)(h + l);
+                        break;
+                    /*
+                    case 0x40:
+                    case 0x41:
+                    case 0x42:
+                    case 0x43:
+                    case 0x44:
+                    case 0x45:
+                    case 0x47:
+                    case 0x48:
+                    case 0x49:
+                    case 0x4A:
+                    case 0x4B:
+                    case 0x4F:
+                    case 0x68:
+                    case 0x69:
+                    case 0x6A:
+                    case 0x6B:
+                        result = ppu.ReadRegister((byte) (address & 0xFF));
+                        break;
+                        */
+                    default:
+                        result = _io[address - 0xFF00];
+                        break;
+                }
+            }
             return result;
-		}
-        
+        }
 
-		public ushort ReadW(ushort address) {
+        public ushort ReadW(ushort address) {
 			var l = (ushort)(Read(address));
 			var h = (ushort)(Read((ushort)(address + 1)));
 			return (ushort)((h << 8 &0xFF00) + l);
@@ -101,13 +161,33 @@ namespace Emulator.Memories {
 			var allowWrite = true;
 
 			//ROM area
-			if (address < 0x8000) {
+			if (address < 0x8000 || (address >= 0xA000 && address <= 0xBFFF)) {
                 _rom.WriteByte(address,value);
 
             }
-			//Joypad
+            else if (address >= 0xC000 && address <= 0xDFFF)
+            {
+                _workRam[address - 0xC000] = value;
+            }
+            else if (address >= 0xE000 && address <= 0xFDFF)
+            {
+                _workRam[address - 0xE000] = value;
+            }
+            else if (address >= 0x8000 && address <= 0x9FFF)
+            {
+                _vram[address - 0x8000] = value;
+            }
+            else if (address >= 0xFE00 && address <= 0xFE9F)
+            {
+                _oam[address - 0xFE00] = value;
+            }
+            else if (address >= 0xFF80 && address <= 0xFFFE)
+            {
+                _highRam[address - 0xFF80] = value;
+            }
+            //Joypad
 			else if (address == 0xFF00) {
-				value = (byte)((_memory[address] & 0x0F) + (value & 0xF0));
+				value = (byte)((_io[0] & 0x0F) + (value & 0xF0));
 			}
 			//Divider, reset if a write is done here
 			else if (address == 0xFF04) {
@@ -117,16 +197,6 @@ namespace Emulator.Memories {
 			else if (address == 0xFF44) {
 				value = allowReadOnlyWrite ? value : (byte)0x00;
 			}
-			//Echoing RAM
-			else if (address >= 0xE000 && address < 0xFE00) {
-				_memory[0xC000 + (address - 0xE000)] = value;
-			} 
-			//Echoing RAM
-			else if (address >= 0xC000 && address < 0xDE00) {
-				_memory[0xE000 + (address - 0xC000)] = value;
-			}
-
-            #region SoundRegister
             else
             {
                 switch (address)
@@ -364,13 +434,31 @@ namespace Emulator.Memories {
                         soundChip.channel3.SetSamplePair(address - 0xFF30, value);
                         _soundRegisters[address - 0xFF10] = value;
                         break;
+                    /*
+                    case 0xFF40:
+                    case 0xFF41:
+                    case 0xFF42:
+                    case 0xFF43:
+                    case 0xFF44:
+                    case 0xFF45:
+                    case 0xFF47:
+                    case 0xFF48:
+                    case 0xFF49:
+                    case 0xFF4A:
+                    case 0xFF4B:
+                    case 0xFF4F:
+                    case 0xFF68:
+                    case 0xFF69:
+                    case 0xFF6A:
+                    case 0xFF6B:
+                        ppu.WriteRegister((byte)(address & 0xFF), value);
+                        break;
+                        */
+                    default:
+                        _io[address - 0xFF00] = value;
+                        break;
                 }
             }
-            #endregion
-
-            if (!allowWrite) return;
-            _memory[address] = value;
-            OnMemoryWritten?.Invoke(this, address);
         }
         
 
