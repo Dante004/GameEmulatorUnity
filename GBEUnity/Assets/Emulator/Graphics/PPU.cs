@@ -1,27 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Emulator.Debugger;
 using Emulator.Memories;
 using UnityEngine;
 
 namespace Emulator.Graphics
 {
-	
-	public class PPU
+    public enum SpriteSize
     {
-		
-		public const int ScreenPixelsWidth = 160;
-		public const int ScreenPixelsHeight = 144;
+        Size8x8,
+        Size8x16
+    }
 
-		private const int HorizontalBlankCycles = 204;
-		private const int VerticalBlankCycles = 456;
-		private const int ScanLinesOamCycles = 80;
-		private const int ScanLineVramCycles = 172;
+    public class PPU
+    {
+        public const int ScreenPixelsWidth = 160;
+        public const int ScreenPixelsHeight = 144;
 
-		private const int TotalTitles = 512;
+        private const int HorizontalBlankCycles = 204;
+        private const int VerticalBlankCycles = 456;
+        private const int ScanLinesOamCycles = 80;
+        private const int ScanLineVramCycles = 172;
+
+        private const int TotalTitles = 512;
 
         private readonly Memory _memory;
 
-		//FF40(LCDC)
-		public int LcdcBGTileMap => (_memory.Read(0xFF40) & 0x08) == 0 ? 0 : 1;
+        //FF40(LCDC)
+        public int LcdcBGTileMap => (_memory.Read(0xFF40) & 0x08) == 0 ? 0 : 1;
         public int LcdcWindowTileMap => (_memory.Read(0xFF40) & 0x40) == 0 ? 0 : 1;
         public int LcdcBGWindowTileData => (_memory.Read(0xFF40) & 0x10) == 0 ? 0 : 1;
 
@@ -37,20 +43,24 @@ namespace Emulator.Graphics
         private bool StatInterruptVBlankEnabled => (_memory.Read((ushort)0xFF41) & 0x10) != 0;
         private bool StatInterruptHBlankEnabled => (_memory.Read((ushort)0xFF41) & 0x08) != 0;
 
-        private bool StatCoincidenceFlag {
-			get => (_memory.Read((ushort)0xFF41) & 0x04) != 0;
-            set { 
-				var data = _memory.Read((ushort)0xFF41);
-				_memory.Write((ushort)0xFF41, (byte)((data & ~0x04) | (value ? 0x04 : 0x00)));
-			}
-		}
-		private GPUMode StatMode {
-			get => (GPUMode)(_memory.Read((ushort)0xFF41) & 0x03);
-            set { 
-				_memory.Write(0xFF41, (byte)((_memory.Read(0xFF41) & ~0x03) + (byte)value)); 
-				CheckLcdInterrupts();
-			}
-		}
+        private bool StatCoincidenceFlag
+        {
+            get => (_memory.Read((ushort)0xFF41) & 0x04) != 0;
+            set
+            {
+                var data = _memory.Read((ushort)0xFF41);
+                _memory.Write((ushort)0xFF41, (byte)((data & ~0x04) | (value ? 0x04 : 0x00)));
+            }
+        }
+        private GPUMode StatMode
+        {
+            get => (GPUMode)(_memory.Read((ushort)0xFF41) & 0x03);
+            set
+            {
+                _memory.Write(0xFF41, (byte)((_memory.Read(0xFF41) & ~0x03) + (byte)value));
+                CheckLcdInterrupts();
+            }
+        }
 
         //FF42(SCY)
         private byte SCY => _memory.Read(0xFF42);
@@ -59,16 +69,19 @@ namespace Emulator.Graphics
         private byte SCX => _memory.Read(0xFF43);
 
         //FF44(LY)
-        private byte LY { 
-			get => _memory.Read(0xFF44);
-            set { 
-				_memory.Write(0xFF44, value, true); 
-				StatCoincidenceFlag = (value == LYC);
-				if (StatCoincidenceFlag && StatInterruptLYCEnabled) {
-					_memory.SetInterrupt(InterruptType.LCDCStatus);
-				}
-			} 
-		}
+        private byte LY
+        {
+            get => _memory.Read(0xFF44);
+            set
+            {
+                _memory.Write(0xFF44, value, true);
+                StatCoincidenceFlag = (value == LYC);
+                if (StatCoincidenceFlag && StatInterruptLYCEnabled)
+                {
+                    _memory.SetInterrupt(InterruptType.LCDCStatus);
+                }
+            }
+        }
 
         //FF45(LYC)
         private byte LYC => _memory.Read(0xFF45);
@@ -94,23 +107,26 @@ namespace Emulator.Graphics
         private uint clock;
 
         readonly Color[] buffer;
-		public Texture2D ScreenTexture { get; private set; }
+        public Texture2D ScreenTexture { get; private set; }
 
-		public PPU(Memory memory) 
-		{
-			_memory = memory;
-			_memory.OnMemoryWritten += (Memory m, ushort address) => {
-				if (address >= 0x8000 && address <= 0x97FF) {
-					UpdateTile(address);
-				} else if (address == 0xFF46) {
-					OamTransfer();
-				}
-			};
+        public PPU(Memory memory)
+        {
+            _memory = memory;
+            _memory.OnMemoryWritten += (Memory m, ushort address) => {
+                if (address >= 0x8000 && address <= 0x97FF)
+                {
+                    UpdateTile(address);
+                }
+                else if (address == 0xFF46)
+                {
+                    OamTransfer();
+                }
+            };
 
-			StatMode = GPUMode.HBlank;
-			LY = 0;
-			clock = 0;
-			buffer = new Color[ScreenPixelsWidth * ScreenPixelsHeight];
+            StatMode = GPUMode.HBlank;
+            LY = 0;
+            clock = 0;
+            buffer = new Color[ScreenPixelsWidth * ScreenPixelsHeight];
 
             ScreenTexture = new Texture2D(ScreenPixelsWidth, ScreenPixelsHeight, TextureFormat.ARGB32, false)
             {
@@ -118,263 +134,291 @@ namespace Emulator.Graphics
             };
         }
 
-		public void Step(uint opCycles)
-		{
-			clock += opCycles;
+        public void Step(uint opCycles)
+        {
+            clock += opCycles;
 
-			switch (StatMode) {
+            switch (StatMode)
+            {
 
-			//OAM Read
-			    case GPUMode.OAMRead:
-				    if (clock >= ScanLinesOamCycles)
+                //OAM Read
+                case GPUMode.OAMRead:
+                    if (clock >= ScanLinesOamCycles)
                     {
-					    clock -= ScanLinesOamCycles;
-					    StatMode = GPUMode.VRAMRead;
-				    }
-				    break;
-
-			//VRAM Read
-			    case GPUMode.VRAMRead:
-				    if (clock >= ScanLineVramCycles)
-                    {
-					    clock -= ScanLineVramCycles;
-					    StatMode = GPUMode.HBlank;
-					    DrawScanLine();
+                        clock -= ScanLinesOamCycles;
+                        StatMode = GPUMode.VRAMRead;
                     }
                     break;
 
-			//HBlank
-			    case GPUMode.HBlank:
-				    if (clock >= HorizontalBlankCycles)
+                //VRAM Read
+                case GPUMode.VRAMRead:
+                    if (clock >= ScanLineVramCycles)
                     {
-					    clock -= HorizontalBlankCycles;
-					    LY++;
+                        clock -= ScanLineVramCycles;
+                        StatMode = GPUMode.HBlank;
+                        DrawScanLine();
+                    }
+                    break;
 
-					    if (LY == (ScreenPixelsHeight - 1))
-                        {
-						    StatMode = GPUMode.VBlank;
-						    _memory.SetInterrupt(InterruptType.VBlank);
-						    DrawScreen();
-					    } else
-                        {
-						    StatMode = GPUMode.OAMRead;
-
-                        }                     }
-				    break;
-			
-			//VBlank
-			    case GPUMode.VBlank:
-				    if (clock >= VerticalBlankCycles)
+                //HBlank
+                case GPUMode.HBlank:
+                    if (clock >= HorizontalBlankCycles)
                     {
-					    clock -= VerticalBlankCycles;
-					    LY++;
+                        clock -= HorizontalBlankCycles;
+                        LY++;
 
-					    if (LY > 153)
+                        if (LY == (ScreenPixelsHeight - 1))
                         {
-						    StatMode = GPUMode.OAMRead;
-						    LY = 0;
-					    }
-				    }
-				    break;
-			}
-		}
+                            StatMode = GPUMode.VBlank;
+                            _memory.SetInterrupt(InterruptType.VBlank);
+                            DrawScreen();
+                        }
+                        else
+                        {
+                            StatMode = GPUMode.OAMRead;
 
-		private void CheckLcdInterrupts()
-		{
-			var setInterrupt = false;
-			setInterrupt = setInterrupt || (StatMode == GPUMode.HBlank && StatInterruptHBlankEnabled);
-			setInterrupt = setInterrupt || (StatMode == GPUMode.VBlank && StatInterruptVBlankEnabled);
-			setInterrupt = setInterrupt || (StatMode == GPUMode.OAMRead && StatInterruptOAMEnabled);
-			if (setInterrupt) {
-				_memory.SetInterrupt(InterruptType.LCDCStatus);
-			}
-		}
+                        }
+                    }
+                    break;
 
-		private void DrawScanLine()
-		{
-			//VRAM size is 32x32 tiles, 1 byte per tile
-			var ly = LY;
-			var lineY = ly + SCY;
-			var lineX = SCX;
-			var bufferY = (ScreenPixelsWidth * ScreenPixelsHeight - (ly * ScreenPixelsWidth)) - ScreenPixelsWidth;
+                //VBlank
+                case GPUMode.VBlank:
+                    if (clock >= VerticalBlankCycles)
+                    {
+                        clock -= VerticalBlankCycles;
+                        LY++;
 
-			if (Lcdc_BGWindowDisplay) {
-				var tileMapAddressOffset = LcdcBGTileMap == 0 ? 0x9800 : 0x9C00;
+                        if (LY > 153)
+                        {
+                            StatMode = GPUMode.OAMRead;
+                            LY = 0;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        private void CheckLcdInterrupts()
+        {
+            var setInterrupt = false;
+            setInterrupt = setInterrupt || (StatMode == GPUMode.HBlank && StatInterruptHBlankEnabled);
+            setInterrupt = setInterrupt || (StatMode == GPUMode.VBlank && StatInterruptVBlankEnabled);
+            setInterrupt = setInterrupt || (StatMode == GPUMode.OAMRead && StatInterruptOAMEnabled);
+            if (setInterrupt)
+            {
+                _memory.SetInterrupt(InterruptType.LCDCStatus);
+            }
+        }
+
+        private void DrawScanLine()
+        {
+            //VRAM size is 32x32 tiles, 1 byte per tile
+            var ly = LY;
+            var lineY = ly + SCY;
+            var lineX = SCX;
+            var bufferY = (ScreenPixelsWidth * ScreenPixelsHeight - (ly * ScreenPixelsWidth)) - ScreenPixelsWidth;
+
+            if (Lcdc_BGWindowDisplay)
+            {
+                var tileMapAddressOffset = LcdcBGTileMap == 0 ? 0x9800 : 0x9C00;
                 int[] tile = null;
 
-				for (var i = 0; i < ScreenPixelsWidth; ++i) {
-					if (i == 0 || (lineX & 7) == 0) {
-					
-						var tileMapY = ((lineY >> 3) & 31);
-						var tileMapX = ((lineX >> 3) & 31);
+                for (var i = 0; i < ScreenPixelsWidth; ++i)
+                {
+                    if (i == 0 || (lineX & 7) == 0)
+                    {
 
-						int nTile = _memory.Read((ushort)(tileMapAddressOffset + (tileMapY << 5) + tileMapX));
-						if (LcdcBGWindowTileData == 0) {
-							if (nTile > 127) {
-								nTile -= 0x100;
-							}
-							nTile = 256 + nTile;
-						}
+                        var tileMapY = ((lineY >> 3) & 31);
+                        var tileMapX = ((lineX >> 3) & 31);
 
-						if (!_tiles.ContainsKey((uint)(nTile))) {
-							continue;
-						}
-						tile = _tiles[(uint)nTile];
-					}
+                        int nTile = _memory.Read((ushort)(tileMapAddressOffset + (tileMapY << 5) + tileMapX));
+                        if (LcdcBGWindowTileData == 0)
+                        {
+                            if (nTile > 127)
+                            {
+                                nTile -= 0x100;
+                            }
+                            nTile = 256 + nTile;
+                        }
 
-					if (tile == null) {
-						continue;
-					}
+                        if (!_tiles.ContainsKey((uint)(nTile)))
+                        {
+                            continue;
+                        }
+                        tile = _tiles[(uint)nTile];
+                    }
 
-					var tileY = lineY & 7;
-					var tileX = lineX & 7;
+                    if (tile == null)
+                    {
+                        continue;
+                    }
 
-					buffer[bufferY + i] = ColorForPalette(BGP, tile[(tileY << 3) + tileX]);
-					lineX++;
-				}
-			}
+                    var tileY = lineY & 7;
+                    var tileX = lineX & 7;
 
-			if (LcdcSpriteDisplay) {
-				const int oamAddress = 0xFE00;
+                    buffer[bufferY + i] = ColorForPalette(BGP, tile[(tileY << 3) + tileX]);
+                    lineX++;
+                }
+            }
 
-                for (var i = 0; i < 40; ++i) {
-					var yPosition = _memory.Read((ushort)(oamAddress + i * 4)) - 16;
-					var xPosition = _memory.Read((ushort)(oamAddress + i * 4 + 1)) - 8;
-					var n = _memory.Read((ushort)(oamAddress + i * 4 + 2));
-					var flags = _memory.Read((ushort)(oamAddress + i * 4 + 3));
+            if (LcdcSpriteDisplay)
+            {
+                const int oamAddress = 0xFE00;
 
-					var maxSprites = Lcdc_SpriteSize == SpriteSize.Size8x8 ? 1 : 2;
-					for (var j = 0; j < maxSprites; ++j) {
+                for (var i = 0; i < 40; ++i)
+                {
+                    var yPosition = _memory.Read((ushort)(oamAddress + i * 4)) - 16;
+                    var xPosition = _memory.Read((ushort)(oamAddress + i * 4 + 1)) - 8;
+                    var n = _memory.Read((ushort)(oamAddress + i * 4 + 2));
+                    var flags = _memory.Read((ushort)(oamAddress + i * 4 + 3));
 
-						n = (byte)(n + j);
-						yPosition += 8 * j;
+                    var maxSprites = Lcdc_SpriteSize == SpriteSize.Size8x8 ? 1 : 2;
+                    for (var j = 0; j < maxSprites; ++j)
+                    {
 
-						if (!_tiles.ContainsKey(n)) {
-							continue;
-						}
+                        n = (byte)(n + j);
+                        yPosition += 8 * j;
 
-						if (ly >= yPosition && yPosition + 8 > ly) {
-						
-							var palette = (flags & 0x10) == 0 ? OBP0 : OBP1;
-							var xFlip = (flags & 0x20) != 0;
-							var yFlip = (flags & 0x40) != 0;
-							var priority = (flags & 0x80) == 0 ? 0 : 1;
+                        if (!_tiles.ContainsKey(n))
+                        {
+                            continue;
+                        }
 
-							var spriteRow = (ly - yPosition);
-							if (yFlip) {
-								spriteRow = 7 - spriteRow;
-							}
+                        if (ly >= yPosition && yPosition + 8 > ly)
+                        {
+
+                            var palette = (flags & 0x10) == 0 ? OBP0 : OBP1;
+                            var xFlip = (flags & 0x20) != 0;
+                            var yFlip = (flags & 0x40) != 0;
+                            var priority = (flags & 0x80) == 0 ? 0 : 1;
+
+                            var spriteRow = (ly - yPosition);
+                            if (yFlip)
+                            {
+                                spriteRow = 7 - spriteRow;
+                            }
 
 
-							for (var x = 0; x < 8; ++x) {
-								var xCoordinatesSprite = xFlip ? 7 - x : x;
-								var xCoordinatesBuffer = bufferY + xPosition + x;
-								var pixelColor = _tiles[n][spriteRow * 8 + xCoordinatesSprite];
-								if (((xPosition + xCoordinatesSprite) >= 0) && ((xPosition + xCoordinatesSprite) < ScreenPixelsWidth)
-								   && pixelColor != 0
-								   && (priority == 0 || buffer[xCoordinatesBuffer] == _colors[0])) {
-									buffer[xCoordinatesBuffer] = ColorForPalette(palette, pixelColor);
-								}
-							}
-						}
-					}
+                            for (var x = 0; x < 8; ++x)
+                            {
+                                var xCoordinatesSprite = xFlip ? 7 - x : x;
+                                var xCoordinatesBuffer = bufferY + xPosition + x;
+                                var pixelColor = _tiles[n][spriteRow * 8 + xCoordinatesSprite];
+                                if (((xPosition + xCoordinatesSprite) >= 0) && ((xPosition + xCoordinatesSprite) < ScreenPixelsWidth)
+                                   && pixelColor != 0
+                                   && (priority == 0 || buffer[xCoordinatesBuffer] == _colors[0]))
+                                {
+                                    buffer[xCoordinatesBuffer] = ColorForPalette(palette, pixelColor);
+                                }
+                            }
+                        }
+                    }
 
-				}
-			}
+                }
+            }
 
-			var wx = WX - 7;
-			var wy = WY;
-			lineY = ly;
-			lineX = 0;
+            var wx = WX - 7;
+            var wy = WY;
+            lineY = ly;
+            lineX = 0;
 
-			if (LcdcWindowDisplay && ly >= wy) {
-				var tileMapAddressOffset = LcdcWindowTileMap == 0 ? 0x9800 : 0x9C00;
+            if (LcdcWindowDisplay && ly >= wy)
+            {
+                var tileMapAddressOffset = LcdcWindowTileMap == 0 ? 0x9800 : 0x9C00;
                 int[] tile = null;
 
-				for (var i = wx; i < ScreenPixelsWidth; ++i) {
-					if (((i - wx) & 7) == 0) {
-						var tileMapY = (((ly - wy) >> 3) & 31);
-						var tileMapX = (((i - wx) >> 3) & 31);
-						int nTile = _memory.Read((ushort)(tileMapAddressOffset + (tileMapY << 5) + tileMapX));
-						if (LcdcBGWindowTileData == 0) {
-							if (nTile > 127) {
-								nTile -= 0x100;
-							}
-							nTile = 256 + nTile;
-						}
+                for (var i = wx; i < ScreenPixelsWidth; ++i)
+                {
+                    if (((i - wx) & 7) == 0)
+                    {
+                        var tileMapY = (((ly - wy) >> 3) & 31);
+                        var tileMapX = (((i - wx) >> 3) & 31);
+                        int nTile = _memory.Read((ushort)(tileMapAddressOffset + (tileMapY << 5) + tileMapX));
+                        if (LcdcBGWindowTileData == 0)
+                        {
+                            if (nTile > 127)
+                            {
+                                nTile -= 0x100;
+                            }
+                            nTile = 256 + nTile;
+                        }
 
-						if (!_tiles.ContainsKey((uint)(nTile))) {
-							continue;
-						}
-						tile = _tiles[(uint)nTile];
-					}
+                        if (!_tiles.ContainsKey((uint)(nTile)))
+                        {
+                            continue;
+                        }
+                        tile = _tiles[(uint)nTile];
+                    }
 
-					if (tile == null) {
-						continue;
-					}
+                    if (tile == null)
+                    {
+                        continue;
+                    }
 
-					var tileY = (lineY & 7);
-					var tileX = (lineX & 7);
+                    var tileY = (lineY & 7);
+                    var tileX = (lineX & 7);
 
-					buffer[bufferY + i] = ColorForPalette(BGP, tile[(tileY << 3) + tileX]);
-					lineX++;
-				}
-			}
-		}
+                    buffer[bufferY + i] = ColorForPalette(BGP, tile[(tileY << 3) + tileX]);
+                    lineX++;
+                }
+            }
+        }
 
-		private void DrawScreen()
-		{
-			ScreenTexture.SetPixels(0, 0, ScreenPixelsWidth, ScreenPixelsHeight, buffer);
-			ScreenTexture.Apply();
-		}
+        private void DrawScreen()
+        {
+            ScreenTexture.SetPixels(0, 0, ScreenPixelsWidth, ScreenPixelsHeight, buffer);
+            ScreenTexture.Apply();
+        }
 
 
         readonly Color[] _colors = {
-			new Color(224.0f / 255.0f, 248.0f / 255.0f, 208.0f / 255.0f),
-			new Color(136.0f / 255.0f, 192.0f / 255.0f, 112.0f / 255.0f),
-			new Color(52.0f / 255.0f, 104.0f / 255.0f, 86.0f / 255.0f),
-			new Color(8.0f / 255.0f, 24.0f / 255.0f, 32.0f / 255.0f)
-		};
+            new Color(224.0f / 255.0f, 248.0f / 255.0f, 208.0f / 255.0f),
+            new Color(136.0f / 255.0f, 192.0f / 255.0f, 112.0f / 255.0f),
+            new Color(52.0f / 255.0f, 104.0f / 255.0f, 86.0f / 255.0f),
+            new Color(8.0f / 255.0f, 24.0f / 255.0f, 32.0f / 255.0f)
+        };
 
 
         private Color ColorForPalette(byte palette, int colorIdx)
-		{
-			return _colors[((palette & (0x03 << (colorIdx * 2))) >> (colorIdx * 2))];
-		}
+        {
+            return _colors[((palette & (0x03 << (colorIdx * 2))) >> (colorIdx * 2))];
+        }
 
 
         private readonly Dictionary<uint, int[]> _tiles = new Dictionary<uint, int[]>();
-		private void UpdateTile(uint address)
-		{
-			var n = (address - 0x8000) / 16;
-			var tileBaseAddress = 0x8000 + n * 16;
-			var tileRow = (address - tileBaseAddress) / 2;
-			var tileRowAddress = tileBaseAddress + tileRow * 2;
-			
-			if (!_tiles.ContainsKey(n)) {
-				_tiles[n] = new int[8 * 8];
-			}
+        private void UpdateTile(uint address)
+        {
+            var n = (address - 0x8000) / 16;
+            var tileBaseAddress = 0x8000 + n * 16;
+            var tileRow = (address - tileBaseAddress) / 2;
+            var tileRowAddress = tileBaseAddress + tileRow * 2;
 
-			var b1 = _memory.Read((ushort)(tileRowAddress));
-			var b2 = _memory.Read((ushort)(tileRowAddress + 1));
+            if (!_tiles.ContainsKey(n))
+            {
+                _tiles[n] = new int[8 * 8];
+            }
 
-			var tile = _tiles[n];
-			tile[tileRow * 8] = ((b1 & 0x80) >> 7) + ((b2 & 0x80) >> 6);
-			tile[tileRow * 8 + 1] = ((b1 & 0x40) >> 6) + ((b2 & 0x40) >> 5);
-			tile[tileRow * 8 + 2] = ((b1 & 0x20) >> 5) + ((b2 & 0x20) >> 4);
-			tile[tileRow * 8 + 3] = ((b1 & 0x10) >> 4) + ((b2 & 0x10) >> 3);
-			tile[tileRow * 8 + 4] = ((b1 & 0x08) >> 3) + ((b2 & 0x08) >> 2);
-			tile[tileRow * 8 + 5] = ((b1 & 0x04) >> 2) + ((b2 & 0x04) >> 1);
-			tile[tileRow * 8 + 6] = ((b1 & 0x02) >> 1) + ((b2 & 0x02));
-			tile[tileRow * 8 + 7] = ((b1 & 0x01)) + ((b2 & 0x01) << 1);
-		}
+            var b1 = _memory.Read((ushort)(tileRowAddress));
+            var b2 = _memory.Read((ushort)(tileRowAddress + 1));
 
-		private void OamTransfer()
-		{
-			var address = (ushort)(DMA << 8);
-			for (var i = 0; i < 40 * 4; ++i) {
-				_memory.Write((ushort)(0xFE00 + i), _memory.Read((ushort)(address + i)));
-			}
-		}
-	}
+            var tile = _tiles[n];
+            tile[tileRow * 8] = ((b1 & 0x80) >> 7) + ((b2 & 0x80) >> 6);
+            tile[tileRow * 8 + 1] = ((b1 & 0x40) >> 6) + ((b2 & 0x40) >> 5);
+            tile[tileRow * 8 + 2] = ((b1 & 0x20) >> 5) + ((b2 & 0x20) >> 4);
+            tile[tileRow * 8 + 3] = ((b1 & 0x10) >> 4) + ((b2 & 0x10) >> 3);
+            tile[tileRow * 8 + 4] = ((b1 & 0x08) >> 3) + ((b2 & 0x08) >> 2);
+            tile[tileRow * 8 + 5] = ((b1 & 0x04) >> 2) + ((b2 & 0x04) >> 1);
+            tile[tileRow * 8 + 6] = ((b1 & 0x02) >> 1) + ((b2 & 0x02));
+            tile[tileRow * 8 + 7] = ((b1 & 0x01)) + ((b2 & 0x01) << 1);
+        }
+
+        private void OamTransfer()
+        {
+            var address = (ushort)(DMA << 8);
+            for (var i = 0; i < 40 * 4; ++i)
+            {
+                _memory.Write((ushort)(0xFE00 + i), _memory.Read((ushort)(address + i)));
+            }
+        }
+    }
 }
