@@ -16,7 +16,7 @@ public class Detector : MonoBehaviour
 
     public List<string> tiles = new List<string>();
     public List<string> fileArray = new List<string>();
-    public int menuPosition = 0;
+    public int menuPosition;
     public Text title;
 
     void Start()
@@ -51,11 +51,23 @@ public class Detector : MonoBehaviour
                     imageComp.rectTransform.sizeDelta = new Vector2(240, 240);
                 }
             }
+            SetUpPosition();
         }
         else
         {
             Directory.CreateDirectory(pathToRomes);
         }
+    }
+
+    private void SetUpPosition()
+    {
+        menuPosition = PlayerPrefs.GetInt("MenuPosition");
+        Debug.Log(menuPosition);
+        gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
+                                                                                 .localPosition.x -
+                                                                             (287 * menuPosition),
+            0, 0);
+        PlayerPrefs.DeleteKey("MenuPosition");
     }
 
     void Update()
@@ -108,6 +120,8 @@ public class Detector : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             PlayerPrefs.SetString("file", fileArray[menuPosition]);
+            PlayerPrefs.SetInt("MenuPosition", menuPosition);
+            Debug.Log(menuPosition);
             SceneManager.LoadScene(1, LoadSceneMode.Single);
         }
     }
