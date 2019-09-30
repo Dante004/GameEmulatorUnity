@@ -16,11 +16,10 @@ public class Detector : MonoBehaviour
 
     public List<string> tiles = new List<string>();
     public List<string> fileArray = new List<string>();
-    public int menuPosition = 0;
+    public int menuPosition;
     public Text title;
     void Start()
     {
-        getRomPosition();
         var pathToRomes = Path.GetFullPath("Roms");
 
         var images = Resources.LoadAll<Sprite>("img").ToDictionary(x => x.name.ToUpper(), x => x);
@@ -37,8 +36,8 @@ public class Detector : MonoBehaviour
 
                     var romObject = new GameObject($"{romGame.title} Root");
                     romObject.transform.SetParent(gameObject.transform, false);
-                    //romObject.transform.position = new Vector3(_xOffset, 0, 0);
-                    romObject.transform.position = new Vector3(6, 0, 0);
+                    romObject.transform.position = new Vector3(_xOffset, 0, 0);
+
                     _xOffset += 4;
 
                     tiles.Add(romGame.title);
@@ -51,6 +50,7 @@ public class Detector : MonoBehaviour
                     imageComp.rectTransform.sizeDelta = new Vector2(240, 240);
                 }
             }
+            SetRomPosition();
         }
         else
         {
@@ -60,7 +60,6 @@ public class Detector : MonoBehaviour
 
     void Update()
     {
-        //getRomPosition();
         title.text = tiles[menuPosition];
         var h = Input.GetAxisRaw("Horizontal");
         _movingTime -= Time.deltaTime;
@@ -79,7 +78,6 @@ public class Detector : MonoBehaviour
         if ((int)h == 1 && _movingTime < 0)
         {
             menuPosition++;
-            //menuPosition = 4;
             _movingTime = _coolDownMove;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
                                                                                      .localPosition.x - 287, 0, 0);
@@ -94,8 +92,7 @@ public class Detector : MonoBehaviour
 
         if (menuPosition > tiles.Count - 1)
         {
-            //menuPosition = tiles.Count - 1;
-            menuPosition = 3;
+            menuPosition = tiles.Count - 1;
             gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
                                                                                      .localPosition.x + 287, 0, 0);
         }
@@ -108,28 +105,19 @@ public class Detector : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            //PlayerPrefs.SetString("file", fileArray[menuPosition]);
-            //Debug.Log("Wybrano Plik" + PlayerPrefs.GetString("file"));
-            setRomPosition();
+            PlayerPrefs.SetString("file", fileArray[menuPosition]);
+            PlayerPrefs.SetInt("position", menuPosition);
             SceneManager.LoadScene(1, LoadSceneMode.Single);
         }
     }
-    int getRomPosition()
+
+   private  void SetRomPosition()
     {
-        PlayerPrefs.GetString("file");
-        Debug.Log("Ostatinio odpalony" + PlayerPrefs.GetString("file"));
-        Debug.Log("pozycja menu" + menuPosition);
-        PlayerPrefs.GetInt("position");
-        return menuPosition;
-    }
-   public  int setRomPosition()
-    {
-        int tempMenuPosition = 0;
+        menuPosition = PlayerPrefs.GetInt("position");
         Debug.Log("menu position :" + menuPosition);
-        PlayerPrefs.SetString("file", fileArray[menuPosition]);
-        PlayerPrefs.SetInt("position", menuPosition);
-        tempMenuPosition = menuPosition;
-        //return tempMenuPosition;
-        return menuPosition;
+        gameObject.GetComponent<RectTransform>().localPosition = new Vector3(gameObject.GetComponent<RectTransform>()
+                                                                                    .localPosition.x - (menuPosition * 287), 0, 0);
+        PlayerPrefs.DeleteKey("position");
+
     }
 }
